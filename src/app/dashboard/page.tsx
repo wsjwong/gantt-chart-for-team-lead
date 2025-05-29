@@ -25,8 +25,26 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [showCreateTeam, setShowCreateTeam] = useState(false)
   const [newTeamName, setNewTeamName] = useState('')
+  const [showSettings, setShowSettings] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createSupabaseClient()
+
+  // Close settings dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (showSettings) {
+        setShowSettings(null)
+      }
+    }
+
+    if (showSettings) {
+      document.addEventListener('click', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside)
+    }
+  }, [showSettings])
 
   useEffect(() => {
     const getUser = async () => {
@@ -326,7 +344,59 @@ export default function DashboardPage() {
                       </span>
                     </div>
                   </div>
-                  <Settings className="h-5 w-5 text-muted-foreground" />
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setShowSettings(showSettings === team.id ? null : team.id)
+                      }}
+                      className="p-1 rounded hover:bg-accent transition-colors"
+                    >
+                      <Settings className="h-5 w-5 text-muted-foreground hover:text-foreground" />
+                    </button>
+                    
+                    {showSettings === team.id && (
+                      <div className="absolute right-0 top-8 w-48 bg-card border border-border rounded-lg shadow-lg z-50">
+                        <div className="py-1">
+                          <Link
+                            href={`/team/${team.id}`}
+                            className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                            onClick={() => setShowSettings(null)}
+                          >
+                            View Team
+                          </Link>
+                          {isTeamAdmin(team) && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  setShowSettings(null)
+                                  alert('Team settings coming soon!')
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                              >
+                                Team Settings
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  setShowSettings(null)
+                                  if (confirm('Are you sure you want to delete this team? This action cannot be undone.'))
+                                    alert('Delete team functionality coming soon!')
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                              >
+                                Delete Team
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4 text-sm text-muted-foreground">
