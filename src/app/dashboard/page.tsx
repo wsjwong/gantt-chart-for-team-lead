@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus, Edit, Trash2, X } from 'lucide-react'
+import Image from 'next/image'
 import TeamManagementModal from '@/components/TeamManagementModal'
 
 interface Profile {
@@ -534,9 +535,15 @@ export default function DashboardPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Users className="h-8 w-8 text-primary" />
+              <Image 
+                src="/logo.png" 
+                alt="Gantt Chart for Team Leader" 
+                width={40} 
+                height={40} 
+                className="rounded-lg"
+              />
               <div>
-                <h1 className="text-xl font-bold">Team Gantt Chart</h1>
+                <h1 className="text-xl font-bold">Gantt Chart for Team Leader</h1>
                 <p className="text-sm text-muted-foreground">
                   {projects.length} projects • {teamMembers.length} team members
                 </p>
