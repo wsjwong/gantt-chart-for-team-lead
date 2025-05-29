@@ -7,7 +7,7 @@ A modern SaaS application for project management with Gantt chart functionality,
 ### 🎯 Core Functionality
 - **Dark Theme UI** - Modern, professional dark interface
 - **Direct Project Management** - Each team leader manages their own projects directly
-- **Team Member Management** - Add/remove team members to/from projects with Google-style team management modal
+- **Team Member Management** - Add/remove team members to/from projects with consistent Google-style team management modal
 - **Project Assignment** - Assign team members to projects during creation and editing
 - **Modal-based Editing** - Streamlined project editing through interactive modals instead of separate pages
 - **Interactive Gantt Chart** - Click on any project in the timeline to edit details and manage assignments
@@ -19,11 +19,11 @@ A modern SaaS application for project management with Gantt chart functionality,
 #### Team Leader (Project Admin)
 - Full access to all project features
 - Create and manage projects with start/end dates
-- Add/remove team members to/from projects
+- Add/remove team members to/from projects via consistent modal interface
 - Create tasks and assign them to team members
 - Edit project details, timelines, and task assignments
 - View project Gantt chart with team member capacity
-- Access dedicated team management page
+- Access dedicated team management with unified styling
 
 #### Team Member
 - View projects they are assigned to
@@ -152,6 +152,7 @@ The application uses a comprehensive database schema for project and task manage
 ### User Experience
 - Responsive design works on desktop and mobile
 - Dark theme optimized for professional use
+- Consistent design system with unified modal styling
 - Intuitive navigation and clear visual hierarchy
 - Real-time updates across team members
 
