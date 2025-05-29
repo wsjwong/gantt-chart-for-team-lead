@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus, Edit } from 'lucide-react'
-import Link from 'next/link'
+import TeamManagementModal from '@/components/TeamManagementModal'
 
 interface Profile {
   id: string
@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [showCreateProject, setShowCreateProject] = useState(false)
+  const [showTeamModal, setShowTeamModal] = useState(false)
 
   
   // Project form state
@@ -398,13 +399,13 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">Click on any project in the chart to view details and manage tasks</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Link
-              href="/team"
+            <button
+              onClick={() => setShowTeamModal(true)}
               className="flex items-center space-x-2 border border-border text-foreground px-4 py-2 rounded-lg hover:bg-accent transition-colors"
             >
               <Users className="h-4 w-4" />
               <span>Manage Team</span>
-            </Link>
+            </button>
             <button
               onClick={() => setShowCreateProject(true)}
               className="flex items-center space-x-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
@@ -605,6 +606,13 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Team Management Modal */}
+      <TeamManagementModal
+        isOpen={showTeamModal}
+        onClose={() => setShowTeamModal(false)}
+        currentUserId={profile?.id || ''}
+      />
     </div>
   )
 }
