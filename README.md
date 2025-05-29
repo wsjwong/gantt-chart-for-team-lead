@@ -8,10 +8,10 @@ A modern SaaS application for project management with Gantt chart functionality,
 - **Dark Theme UI** - Modern, professional dark interface
 - **Direct Project Management** - Each team leader manages their own projects directly
 - **Team Member Management** - Add/remove team members to/from projects with Google-style team management modal
-- **Task Assignment** - Create tasks and assign them to specific team members
+- **Project Assignment** - Assign team members to projects during creation and editing
+- **Modal-based Editing** - Streamlined project editing through interactive modals instead of separate pages
+- **Interactive Gantt Chart** - Click on any project in the timeline to edit details and manage assignments
 - **Project Timeline Tracking** - Visual project timelines with start and end dates
-- **Task Progress Tracking** - Individual task progress with status tracking (pending, in progress, completed, blocked)
-- **Project Gantt Chart** - Visual timeline showing all project schedules with team member capacity
 - **Date-based Planning** - Use actual dates instead of week numbers for flexible day/week/month views
 
 ### 👥 User Roles
@@ -162,8 +162,7 @@ The application uses a comprehensive database schema for project and task manage
 src/
 ├── app/
 │   ├── auth/           # Authentication pages
-│   ├── dashboard/      # Main dashboard with project Gantt chart
-│   ├── project/[id]/   # Individual project pages with task management
+│   ├── dashboard/      # Main dashboard with interactive Gantt chart and project modals
 │   ├── globals.css     # Global styles and theme
 │   ├── layout.tsx      # Root layout
 │   └── page.tsx        # Landing page
