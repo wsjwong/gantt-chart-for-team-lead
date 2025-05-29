@@ -318,21 +318,13 @@ export default function Home() {
             Join team leads who have simplified their project management with our modern Gantt chart tool. 
             Start with our comprehensive mock data or create your own projects.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              href="/auth" 
-              className="bg-primary text-primary-foreground px-8 py-3 rounded-lg text-lg font-semibold hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
-            >
-              Start Your Free Trial
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-            <Link 
-              href="https://github.com/your-repo" 
-              className="border border-border text-foreground px-8 py-3 rounded-lg text-lg font-semibold hover:bg-accent transition-colors"
-            >
-              View on GitHub
-            </Link>
-          </div>
+          <Link 
+            href="/auth" 
+            className="bg-primary text-primary-foreground px-8 py-3 rounded-lg text-lg font-semibold hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
+          >
+            Start Your Free Trial
+            <ArrowRight className="h-5 w-5" />
+          </Link>
         </div>
       </section>
 
