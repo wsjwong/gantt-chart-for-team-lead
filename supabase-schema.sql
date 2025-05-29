@@ -1,5 +1,55 @@
+-- Drop all existing tables and policies to start fresh
+DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
+DROP POLICY IF EXISTS "Admins can view their own projects" ON projects;
+DROP POLICY IF EXISTS "Admins can create projects" ON projects;
+DROP POLICY IF EXISTS "Admins can update their own projects" ON projects;
+DROP POLICY IF EXISTS "Admins can delete their own projects" ON projects;
+DROP POLICY IF EXISTS "Project members can view project memberships" ON project_members;
+DROP POLICY IF EXISTS "Admins can manage project members" ON project_members;
+DROP POLICY IF EXISTS "Users can view tasks in their projects" ON tasks;
+DROP POLICY IF EXISTS "Admins can manage all tasks in their projects" ON tasks;
+DROP POLICY IF EXISTS "Team members can update their assigned tasks" ON tasks;
+DROP POLICY IF EXISTS "Users can view teams they admin" ON teams;
+DROP POLICY IF EXISTS "Users can create teams" ON teams;
+DROP POLICY IF EXISTS "Admins can update their own teams" ON teams;
+DROP POLICY IF EXISTS "Admins can delete their own teams" ON teams;
+DROP POLICY IF EXISTS "Team members can view teams" ON teams;
+DROP POLICY IF EXISTS "Users can view their own team memberships" ON team_members;
+DROP POLICY IF EXISTS "Team admins can view all team memberships" ON team_members;
+DROP POLICY IF EXISTS "Team admins can manage team memberships" ON team_members;
+DROP POLICY IF EXISTS "Team admins can update team memberships" ON team_members;
+DROP POLICY IF EXISTS "Team admins can delete team memberships" ON team_members;
+DROP POLICY IF EXISTS "Team members can view projects" ON projects;
+DROP POLICY IF EXISTS "Team admins can manage projects" ON projects;
+DROP POLICY IF EXISTS "Project admins can view all tasks" ON tasks;
+DROP POLICY IF EXISTS "Project members can view tasks" ON tasks;
+DROP POLICY IF EXISTS "Project admins can manage all tasks" ON tasks;
+DROP POLICY IF EXISTS "Team members can view tasks" ON tasks;
+DROP POLICY IF EXISTS "Team admins can manage all tasks" ON tasks;
+
+-- Drop triggers
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
+DROP TRIGGER IF EXISTS update_projects_updated_at ON projects;
+DROP TRIGGER IF EXISTS update_tasks_updated_at ON tasks;
+DROP TRIGGER IF EXISTS update_teams_updated_at ON teams;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+-- Drop functions
+DROP FUNCTION IF EXISTS update_updated_at_column();
+DROP FUNCTION IF EXISTS public.handle_new_user();
+
+-- Drop tables in correct order (respecting foreign key constraints)
+DROP TABLE IF EXISTS tasks CASCADE;
+DROP TABLE IF EXISTS project_members CASCADE;
+DROP TABLE IF EXISTS team_members CASCADE;
+DROP TABLE IF EXISTS projects CASCADE;
+DROP TABLE IF EXISTS teams CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+
 -- Create profiles table
-CREATE TABLE IF NOT EXISTS profiles (
+CREATE TABLE profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
@@ -7,8 +57,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create teams table (replacing projects as the main organizational unit)
-CREATE TABLE IF NOT EXISTS teams (
+-- Create teams table (main organizational unit)
+CREATE TABLE teams (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   admin_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -17,7 +67,7 @@ CREATE TABLE IF NOT EXISTS teams (
 );
 
 -- Create team_members table
-CREATE TABLE IF NOT EXISTS team_members (
+CREATE TABLE team_members (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   team_id UUID REFERENCES teams(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -25,8 +75,8 @@ CREATE TABLE IF NOT EXISTS team_members (
   UNIQUE(team_id, user_id)
 );
 
--- Create projects table (now belongs to teams)
-CREATE TABLE IF NOT EXISTS projects (
+-- Create projects table (belongs to teams)
+CREATE TABLE projects (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
@@ -37,7 +87,7 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 
 -- Create tasks table
-CREATE TABLE IF NOT EXISTS tasks (
+CREATE TABLE tasks (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
@@ -58,27 +108,6 @@ ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
-
--- Drop existing policies to avoid conflicts
-DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can view teams they admin" ON teams;
-DROP POLICY IF EXISTS "Users can create teams" ON teams;
-DROP POLICY IF EXISTS "Admins can update their own teams" ON teams;
-DROP POLICY IF EXISTS "Admins can delete their own teams" ON teams;
-DROP POLICY IF EXISTS "Team members can view teams" ON teams;
-DROP POLICY IF EXISTS "Users can view their own team memberships" ON team_members;
-DROP POLICY IF EXISTS "Team admins can view all team memberships" ON team_members;
-DROP POLICY IF EXISTS "Team admins can manage team memberships" ON team_members;
-DROP POLICY IF EXISTS "Team admins can update team memberships" ON team_members;
-DROP POLICY IF EXISTS "Team admins can delete team memberships" ON team_members;
-DROP POLICY IF EXISTS "Team members can view projects" ON projects;
-DROP POLICY IF EXISTS "Team admins can manage projects" ON projects;
-DROP POLICY IF EXISTS "Project admins can view all tasks" ON tasks;
-DROP POLICY IF EXISTS "Project members can view tasks" ON tasks;
-DROP POLICY IF EXISTS "Project admins can manage all tasks" ON tasks;
-DROP POLICY IF EXISTS "Team members can update their assigned tasks" ON tasks;
 
 -- Profiles policies
 CREATE POLICY "Users can view their own profile" ON profiles
@@ -213,19 +242,15 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_teams_updated_at ON teams;
 CREATE TRIGGER update_teams_updated_at BEFORE UPDATE ON teams
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_projects_updated_at ON projects;
 CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_tasks_updated_at ON tasks;
 CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -241,18 +266,17 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger for new user signup
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_teams_admin_id ON teams(admin_id);
-CREATE INDEX IF NOT EXISTS idx_team_members_team_id ON team_members(team_id);
-CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id);
-CREATE INDEX IF NOT EXISTS idx_projects_team_id ON projects(team_id);
-CREATE INDEX IF NOT EXISTS idx_projects_admin_id ON projects(admin_id);
-CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);
-CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);
-CREATE INDEX IF NOT EXISTS idx_tasks_start_date ON tasks(start_date);
-CREATE INDEX IF NOT EXISTS idx_tasks_end_date ON tasks(end_date);
+CREATE INDEX idx_teams_admin_id ON teams(admin_id);
+CREATE INDEX idx_team_members_team_id ON team_members(team_id);
+CREATE INDEX idx_team_members_user_id ON team_members(user_id);
+CREATE INDEX idx_projects_team_id ON projects(team_id);
+CREATE INDEX idx_projects_admin_id ON projects(admin_id);
+CREATE INDEX idx_tasks_project_id ON tasks(project_id);
+CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
+CREATE INDEX idx_tasks_start_date ON tasks(start_date);
+CREATE INDEX idx_tasks_end_date ON tasks(end_date);
