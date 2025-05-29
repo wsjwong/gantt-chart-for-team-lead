@@ -1,14 +1,14 @@
 -- Insert team members (profiles) with mock emails
 INSERT INTO profiles (id, email, full_name, invitation_status) VALUES
-(gen_random_uuid(), 'jeffrey.wong@company.com', 'Jeffrey', 'active'),
-(gen_random_uuid(), 'nerissa.chen@company.com', 'Nerissa', 'active'),
-(gen_random_uuid(), 'edmund.lee@company.com', 'Edmund', 'active'),
-(gen_random_uuid(), 'elaine.tam@company.com', 'Elaine', 'active'),
-(gen_random_uuid(), 'dorothy.liu@company.com', 'Dorothy', 'active'),
-(gen_random_uuid(), 'jonathan.ng@company.com', 'Jonathan', 'active'),
-(gen_random_uuid(), 'carson.chan@company.com', 'Carson', 'active'),
-(gen_random_uuid(), 'melo.kim@company.com', 'Melo', 'active'),
-(gen_random_uuid(), 'phoebe.zhao@company.com', 'Phoebe', 'active')
+(gen_random_uuid(), 'jeffrey.wong@company.com', 'Jeffrey', 'accepted'),
+(gen_random_uuid(), 'nerissa.chen@company.com', 'Nerissa', 'accepted'),
+(gen_random_uuid(), 'edmund.lee@company.com', 'Edmund', 'accepted'),
+(gen_random_uuid(), 'elaine.tam@company.com', 'Elaine', 'accepted'),
+(gen_random_uuid(), 'dorothy.liu@company.com', 'Dorothy', 'accepted'),
+(gen_random_uuid(), 'jonathan.ng@company.com', 'Jonathan', 'accepted'),
+(gen_random_uuid(), 'carson.chan@company.com', 'Carson', 'accepted'),
+(gen_random_uuid(), 'melo.kim@company.com', 'Melo', 'accepted'),
+(gen_random_uuid(), 'phoebe.zhao@company.com', 'Phoebe', 'accepted')
 ON CONFLICT (email) DO NOTHING;
 
 -- Insert projects with calculated dates (assuming 2024 and week 1 starts Jan 1)

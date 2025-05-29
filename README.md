@@ -102,6 +102,7 @@ NEXTAUTH_SECRET=your_nextauth_secret_key_here
 2. Go to Settings > API to get your project URL and anon key
 3. In the Supabase SQL Editor, run the schema from `database_migration.sql`
 4. Enable email authentication in Authentication > Settings
+5. **Optional**: Load mock data by running `mock_data_inserts.sql` in the SQL Editor
 
 ### 4. Run the Application
 
@@ -110,6 +111,52 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` to see the application.
+
+## Mock Data
+
+The project includes a comprehensive mock dataset (`mock_data_inserts.sql`) with:
+
+### Team Members (9 profiles)
+- Jeffrey Wong (jeffrey.wong@company.com)
+- Nerissa Chen (nerissa.chen@company.com)
+- Edmund Lee (edmund.lee@company.com)
+- Elaine Tam (elaine.tam@company.com)
+- Dorothy Liu (dorothy.liu@company.com)
+- Jonathan Ng (jonathan.ng@company.com)
+- Carson Chan (carson.chan@company.com)
+- Melo Kim (melo.kim@company.com)
+- Phoebe Zhao (phoebe.zhao@company.com)
+
+### Projects (28 projects)
+Includes realistic project names with calculated start/end dates:
+- **Troubleshooting** (Week 18-53, 2024)
+- **PWH LAS** (Week 7-16, 2024)
+- **QMH Pivka +RUO+A1c** (Week 20-22, 2024)
+- **UCH LAS** (Week 41-53, 2024)
+- **Mass spec training** (Week 22, 2024)
+- **KAM training** (Week 23, 2024)
+- **Evaluation revamp** (Week 23-31, 2024)
+- And 21 more projects covering various medical/lab workflows
+
+### Project Assignments
+- Each team member is assigned to multiple projects
+- Realistic workload distribution across the team
+- Projects span from early 2024 to end of 2024
+- Week numbers converted to actual calendar dates
+
+### Loading Mock Data
+```sql
+-- Run this in Supabase SQL Editor after setting up the schema
+-- File: mock_data_inserts.sql
+
+-- This will create:
+-- 1. 9 team member profiles with mock emails
+-- 2. 28 projects with realistic timelines
+-- 3. Project member assignments linking team members to projects
+-- 4. Proper UUID generation and constraint handling
+```
+
+**Note**: The mock data uses `invitation_status = 'accepted'` to comply with database constraints. All team members are set as active users.
 
 ## Database Schema
 
