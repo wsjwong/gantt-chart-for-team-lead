@@ -1,58 +1,15 @@
--- Drop all existing tables and policies to start fresh
-DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
-DROP POLICY IF EXISTS "Admins can view their own projects" ON projects;
-DROP POLICY IF EXISTS "Admins can create projects" ON projects;
-DROP POLICY IF EXISTS "Admins can update their own projects" ON projects;
-DROP POLICY IF EXISTS "Admins can delete their own projects" ON projects;
-DROP POLICY IF EXISTS "Project members can view project memberships" ON project_members;
-DROP POLICY IF EXISTS "Admins can manage project members" ON project_members;
-DROP POLICY IF EXISTS "Users can view tasks in their projects" ON tasks;
-DROP POLICY IF EXISTS "Admins can manage all tasks in their projects" ON tasks;
-DROP POLICY IF EXISTS "Team members can update their assigned tasks" ON tasks;
-DROP POLICY IF EXISTS "Users can view teams they admin" ON teams;
-DROP POLICY IF EXISTS "Users can create teams" ON teams;
-DROP POLICY IF EXISTS "Admins can update their own teams" ON teams;
-DROP POLICY IF EXISTS "Admins can delete their own teams" ON teams;
-DROP POLICY IF EXISTS "Team members can view teams" ON teams;
-DROP POLICY IF EXISTS "Users can view their own team memberships" ON team_members;
-DROP POLICY IF EXISTS "Team admins can view all team memberships" ON team_members;
-DROP POLICY IF EXISTS "Team admins can manage team memberships" ON team_members;
-DROP POLICY IF EXISTS "Team admins can update team memberships" ON team_members;
-DROP POLICY IF EXISTS "Team admins can delete team memberships" ON team_members;
-DROP POLICY IF EXISTS "Team members can view projects" ON projects;
-DROP POLICY IF EXISTS "Team admins can manage projects" ON projects;
-DROP POLICY IF EXISTS "Project admins can view all tasks" ON tasks;
-DROP POLICY IF EXISTS "Project members can view tasks" ON tasks;
-DROP POLICY IF EXISTS "Project admins can manage all tasks" ON tasks;
-DROP POLICY IF EXISTS "Team members can view tasks" ON tasks;
-DROP POLICY IF EXISTS "Team admins can manage all tasks" ON tasks;
-DROP POLICY IF EXISTS "Team admins can view their projects" ON projects;
-DROP POLICY IF EXISTS "Team admins can create projects" ON projects;
-DROP POLICY IF EXISTS "Team admins can update their projects" ON projects;
-DROP POLICY IF EXISTS "Team admins can delete their projects" ON projects;
-DROP POLICY IF EXISTS "Users can view tasks they're assigned" ON tasks;
-DROP POLICY IF EXISTS "Users can update tasks they're assigned" ON tasks;
-
--- Drop triggers
-DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
-DROP TRIGGER IF EXISTS update_projects_updated_at ON projects;
-DROP TRIGGER IF EXISTS update_tasks_updated_at ON tasks;
-DROP TRIGGER IF EXISTS update_teams_updated_at ON teams;
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-
--- Drop functions
-DROP FUNCTION IF EXISTS update_updated_at_column();
-DROP FUNCTION IF EXISTS public.handle_new_user();
-
 -- Drop tables in correct order (respecting foreign key constraints)
+-- This will automatically drop all policies, triggers, and constraints
 DROP TABLE IF EXISTS tasks CASCADE;
 DROP TABLE IF EXISTS project_members CASCADE;
 DROP TABLE IF EXISTS team_members CASCADE;
 DROP TABLE IF EXISTS projects CASCADE;
 DROP TABLE IF EXISTS teams CASCADE;
 DROP TABLE IF EXISTS profiles CASCADE;
+
+-- Drop functions if they exist
+DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 
 -- Create profiles table
 CREATE TABLE profiles (
