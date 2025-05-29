@@ -155,8 +155,24 @@ CREATE POLICY "Users can view project memberships" ON project_members
     )
   );
 
-CREATE POLICY "Project admins can manage members" ON project_members
-  FOR ALL USING (
+CREATE POLICY "Project admins can insert members" ON project_members
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM projects 
+      WHERE id = project_members.project_id AND admin_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Project admins can update members" ON project_members
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM projects 
+      WHERE id = project_members.project_id AND admin_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Project admins can delete members" ON project_members
+  FOR DELETE USING (
     EXISTS (
       SELECT 1 FROM projects 
       WHERE id = project_members.project_id AND admin_id = auth.uid()
@@ -173,8 +189,7 @@ CREATE POLICY "Users can view tasks in their projects" ON tasks
     ) OR
     EXISTS (
       SELECT 1 FROM project_members pm
-      JOIN projects p ON pm.project_id = p.id
-      WHERE p.id = tasks.project_id AND pm.user_id = auth.uid()
+      WHERE pm.project_id = tasks.project_id AND pm.user_id = auth.uid()
     )
   );
 
@@ -189,6 +204,14 @@ CREATE POLICY "Users can update tasks they're assigned or admin projects" ON tas
 
 CREATE POLICY "Project admins can create tasks" ON tasks
   FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM projects 
+      WHERE id = tasks.project_id AND admin_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Project admins can delete tasks" ON tasks
+  FOR DELETE USING (
     EXISTS (
       SELECT 1 FROM projects 
       WHERE id = tasks.project_id AND admin_id = auth.uid()

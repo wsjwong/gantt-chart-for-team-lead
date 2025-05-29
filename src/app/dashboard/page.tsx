@@ -147,10 +147,9 @@ export default function DashboardPage() {
   }, [router, supabase])
 
   const loadData = async (userProfile: Profile) => {
-    await Promise.all([
-      loadProjects(userProfile),
-      loadTeamMembers(userProfile)
-    ])
+    // Load projects first, then team members (which depends on projects)
+    await loadProjects(userProfile)
+    await loadTeamMembers(userProfile)
   }
 
   const loadProjects = async (userProfile: Profile) => {
@@ -164,6 +163,7 @@ export default function DashboardPage() {
       
       if (ownedError) {
         console.error('Error loading owned projects:', ownedError)
+        // Continue with empty array if error
       }
       
       // Get projects user is a member of
@@ -177,6 +177,7 @@ export default function DashboardPage() {
       
       if (memberError) {
         console.error('Error loading member projects:', memberError)
+        // Continue with empty array if error
       }
       
       // Combine owned projects and member projects
@@ -231,6 +232,13 @@ export default function DashboardPage() {
 
   const loadTeamMembers = async (userProfile: Profile) => {
     try {
+      // Only load team members if we have projects
+      if (projects.length === 0) {
+        // Just add current user as the only team member
+        setTeamMembers([userProfile as TeamMember])
+        return
+      }
+
       // Get all unique team members from all projects
       const { data, error } = await supabase
         .from('project_members')
@@ -245,6 +253,8 @@ export default function DashboardPage() {
 
       if (error) {
         console.error('Error loading team members:', error)
+        // Fallback to just current user
+        setTeamMembers([userProfile as TeamMember])
         return
       }
 
@@ -266,6 +276,8 @@ export default function DashboardPage() {
       setTeamMembers(uniqueMembers)
     } catch (err) {
       console.error('Unexpected error loading team members:', err)
+      // Fallback to just current user
+      setTeamMembers([userProfile as TeamMember])
     }
   }
 
