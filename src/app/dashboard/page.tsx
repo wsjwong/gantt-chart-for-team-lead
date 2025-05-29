@@ -188,8 +188,8 @@ export default function DashboardPage() {
 
   const loadProjects = async (userProfile: Profile) => {
     try {
-      // Get all projects with their assigned members
-      const { data: allProjectsData, error: projectsError } = await supabase
+      // Get projects where user is admin
+      const { data: adminProjects, error: adminError } = await supabase
         .from('projects')
         .select(`
           *,
@@ -202,13 +202,54 @@ export default function DashboardPage() {
             )
           )
         `)
-        .or(`admin_id.eq.${userProfile.id},project_members.user_id.eq.${userProfile.id}`)
+        .eq('admin_id', userProfile.id)
         .order('created_at', { ascending: false })
       
-      if (projectsError) {
-        console.error('Error loading projects:', projectsError)
-        return
+      if (adminError) {
+        console.error('Error loading admin projects:', adminError)
+        return []
       }
+      
+      // Get projects where user is a member
+      const { data: memberProjectIds, error: memberError } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('user_id', userProfile.id)
+      
+      if (memberError) {
+        console.error('Error loading member projects:', memberError)
+        return []
+      }
+      
+      let memberProjects: Project[] = []
+      if (memberProjectIds && memberProjectIds.length > 0) {
+        const { data: memberProjectsData, error: memberProjectsError } = await supabase
+          .from('projects')
+          .select(`
+            *,
+            project_members (
+              user_id,
+              profiles (
+                id,
+                full_name,
+                email
+              )
+            )
+          `)
+          .in('id', memberProjectIds.map(p => p.project_id))
+          .order('created_at', { ascending: false })
+        
+        if (memberProjectsError) {
+          console.error('Error loading member projects data:', memberProjectsError)
+        } else {
+          memberProjects = memberProjectsData || []
+        }
+      }
+      
+      // Combine admin and member projects
+      const allProjectsData = [...(adminProjects || []), ...memberProjects]
+      
+
       
       // Process projects to include assignment information
       const processedProjects: Project[] = (allProjectsData || []).map(project => {

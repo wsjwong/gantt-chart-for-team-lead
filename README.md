@@ -4,6 +4,12 @@ A modern SaaS application for team capacity monitoring with Gantt chart function
 
 ## Recent Updates
 
+### Latest Bug Fix (v1.3.1)
+- **Fixed Team Member Assignment in Project Modals** - Resolved critical issue where team members were not appearing in the assignment dropdown when creating or editing projects
+- **Data Loading Sequence Fix** - Fixed the order of data loading to ensure team members are properly loaded before being displayed in project forms
+- **Function Parameter Updates** - Updated `loadTeamMembers` function to receive projects as a parameter, preventing empty team member lists
+- **Project Creation/Editing** - Team member assignment dropdowns now properly populate with all available team members including invited users
+
 ### Latest Features (v1.3.0)
 - **Person-Level Capacity View** - Gantt chart now groups projects by assigned team members for better capacity monitoring
 - **Visual Capacity Indicators** - Color-coded capacity bars showing normal (green), high (yellow), and over-capacity (red) workloads
