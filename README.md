@@ -5,6 +5,7 @@ A modern SaaS application for project management with Gantt chart functionality,
 ## Features
 
 ### 🎯 Core Functionality
+- **Professional Branding** - Custom logo integration with modern visual identity
 - **Dark Theme UI** - Modern, professional dark interface
 - **Direct Project Management** - Each team leader manages their own projects directly
 - **Team Member Management** - Add/remove team members to/from projects with consistent Google-style team management modal
