@@ -2,6 +2,16 @@
 
 A modern SaaS application for project management with Gantt chart functionality, built with Next.js, Tailwind CSS, and Supabase. This tool is specifically designed for team leaders to manage their projects with simple project-based timelines, replacing complex task management with streamlined project tracking.
 
+## Recent Updates
+
+### Latest Fixes (v1.2.1)
+- **Fixed Team Management Modal** - Resolved critical issue where team members were not loading in the manage team modal
+- **Enhanced Profile Creation** - Improved user profile creation with upsert functionality to handle race conditions and concurrent access
+- **Better Error Handling** - Added comprehensive error messages for profile access issues and RLS policy problems
+- **Optimized Data Loading** - Fixed data loading sequence in TeamManagementModal to ensure projects load before team members
+- **RLS Policy Improvements** - Enhanced compatibility with Supabase Row Level Security policies
+- **Database Cleanup** - Removed unused migration files and setup documentation
+
 ## Features
 
 ### 🎯 Core Functionality
