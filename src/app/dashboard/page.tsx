@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus } from 'lucide-react'
+import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus, Edit } from 'lucide-react'
 import Link from 'next/link'
 
 interface Profile {
@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [showCreateProject, setShowCreateProject] = useState(false)
+
   
   // Project form state
   const [projectForm, setProjectForm] = useState({
@@ -302,7 +303,9 @@ export default function DashboardPage() {
     setCurrentDate(newDate)
   }
 
-
+  const handleProjectClick = (project: Project) => {
+    router.push(`/project/${project.id}`)
+  }
 
   const getProjectPosition = (project: Project, weekIndex: number) => {
     const projectStart = new Date(project.start_date)
@@ -391,8 +394,8 @@ export default function DashboardPage() {
         {/* Projects Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Your Projects</h2>
-            <p className="text-muted-foreground">Manage your team&apos;s projects and track progress</p>
+            <h2 className="text-2xl font-bold text-foreground">Project Timeline</h2>
+            <p className="text-muted-foreground">Click on any project in the chart to view details and manage tasks</p>
           </div>
           <div className="flex items-center space-x-3">
             <Link
@@ -427,55 +430,12 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Projects List */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {projects.map((project) => (
-            <div key={project.id} className="bg-card p-4 rounded-lg border border-border hover:border-primary/50 transition-colors">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground">{project.name}</h3>
-                  {project.description && (
-                    <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2 mb-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Start:</span>
-                  <span className="font-medium">{new Date(project.start_date).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">End:</span>
-                  <span className="font-medium">{new Date(project.end_date).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Duration:</span>
-                  <span className="font-medium">{calculateProjectDuration(project)} days</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(project.created_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                <Link
-                  href={`/project/${project.id}`}
-                  className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm font-medium hover:bg-primary/90 transition-colors"
-                >
-                  Open
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-
         {/* Gantt Chart */}
         {projects.length > 0 ? (
           <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="p-4 border-b border-border">
-              <h3 className="text-lg font-semibold">Project Timeline</h3>
+              <h3 className="text-lg font-semibold">Interactive Project Timeline</h3>
+              <p className="text-sm text-muted-foreground">Click on any project row to view details and manage tasks</p>
             </div>
             
             {/* Header Row */}
@@ -494,13 +454,23 @@ export default function DashboardPage() {
             {/* Data Rows */}
             <div className="max-h-[400px] overflow-y-auto">
               {projects.map((project) => (
-                <div key={project.id} className="grid grid-cols-[300px_repeat(12,80px)] gap-0 border-b border-border hover:bg-muted/30">
+                <div 
+                  key={project.id} 
+                  className="grid grid-cols-[300px_repeat(12,80px)] gap-0 border-b border-border hover:bg-muted/30 cursor-pointer transition-colors"
+                  onClick={() => handleProjectClick(project)}
+                >
                   <div className="p-3 border-r border-border">
-                    <div>
-                      <span className="text-sm font-medium">{project.name}</span>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-medium">{project.name}</span>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {calculateProjectDuration(project)} days
+                        </div>
                       </div>
+                      <Edit className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                   {weeks.slice(0, 12).map((week, weekIndex) => {
@@ -511,9 +481,9 @@ export default function DashboardPage() {
                         {position && (
                           <div className="h-6 relative">
                             <div 
-                              className="h-full rounded bg-blue-500 flex items-center justify-center"
+                              className="h-full rounded bg-blue-500 flex items-center justify-center hover:bg-blue-600 transition-colors"
                               style={{ width: `${position.percentage}%` }}
-                              title={`${project.name}: ${Math.round(position.percentage)}% of week`}
+                              title={`${project.name}: ${Math.round(position.percentage)}% of week - Click to manage`}
                             >
                               {position.percentage > 50 && (
                                 <span className="text-xs text-white font-medium">
@@ -535,7 +505,11 @@ export default function DashboardPage() {
               <div className="flex items-center space-x-6 text-sm">
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                  <span>Project Timeline</span>
+                  <span>Project Timeline (Click to manage)</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Edit className="h-4 w-4 text-muted-foreground" />
+                  <span>Interactive - Click any project to view details</span>
                 </div>
               </div>
             </div>
@@ -547,7 +521,7 @@ export default function DashboardPage() {
               No Projects Yet
             </h3>
             <p className="text-muted-foreground mb-6">
-              Create your first project to see the Gantt chart
+              Create your first project to see the interactive Gantt chart
             </p>
             <button
               onClick={() => setShowCreateProject(true)}
