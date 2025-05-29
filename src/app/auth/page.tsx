@@ -53,29 +53,7 @@ export default function AuthPage() {
         if (error) throw error
 
         if (data.user) {
-          // Create profile record in the database
-          try {
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .insert({
-                id: data.user.id,
-                email: data.user.email || email,
-                full_name: fullName || null,
-                invitation_status: 'accepted',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              })
-            
-            if (profileError) {
-              console.error('Error creating profile:', profileError)
-              // Don't throw here - the user account was created successfully
-              // The dashboard will handle profile creation as fallback
-            }
-          } catch (profileErr) {
-            console.error('Unexpected error creating profile:', profileErr)
-            // Continue with normal flow
-          }
-
+          // Profile record will be created automatically by database trigger
           if (data.user.email_confirmed_at) {
             // User is confirmed, redirect to dashboard
             router.push('/dashboard')
