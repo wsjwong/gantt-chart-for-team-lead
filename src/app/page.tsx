@@ -316,7 +316,7 @@ export default function Home() {
           <h3 className="text-3xl font-bold mb-6">Ready to Monitor Your Team Capacity?</h3>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Join team leads who have simplified their project management with our modern Gantt chart tool. 
-            Start with our comprehensive mock data or create your own projects.
+            Start managing your team capacity today.
           </p>
           <Link 
             href="/auth" 
