@@ -618,11 +618,7 @@ export default function DashboardPage() {
               <div className="flex items-center space-x-6 text-sm">
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                  <span>Project Timeline (Click to manage)</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Edit className="h-4 w-4 text-muted-foreground" />
-                  <span>Interactive - Click any project to view details</span>
+                  <span>Project Timeline</span>
                 </div>
               </div>
             </div>
