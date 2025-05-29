@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, Plus, Users, FolderOpen, UserPlus, Settings } from 'lucide-react'
+import { ArrowLeft, Plus, Users, FolderOpen, UserPlus } from 'lucide-react'
 import Link from 'next/link'
 
 interface Profile {
@@ -48,7 +48,7 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true)
   const [showCreateProject, setShowCreateProject] = useState(false)
   const [showAddMember, setShowAddMember] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
+
   const [newMemberEmail, setNewMemberEmail] = useState('')
   
   // Project form state
@@ -56,23 +56,6 @@ export default function TeamPage() {
     name: '',
     description: ''
   })
-
-  // Close settings dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => {
-      if (showSettings) {
-        setShowSettings(false)
-      }
-    }
-
-    if (showSettings) {
-      document.addEventListener('click', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside)
-    }
-  }, [showSettings])
 
   useEffect(() => {
     const loadTeamData = async () => {
@@ -345,58 +328,7 @@ export default function TeamPage() {
                   </button>
                 </>
               )}
-              
-              {/* Settings Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowSettings(!showSettings)}
-                  className="flex items-center space-x-2 border border-border text-foreground px-3 py-2 rounded-lg hover:bg-accent transition-colors"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Settings</span>
-                </button>
-                
-                {showSettings && (
-                  <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          setShowSettings(false)
-                          // Add team settings functionality here
-                          alert('Team settings coming soon!')
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
-                      >
-                        Team Settings
-                      </button>
-                      {isTeamAdmin() && (
-                        <>
-                          <button
-                            onClick={() => {
-                              setShowSettings(false)
-                              setShowAddMember(true)
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
-                          >
-                            Manage Members
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowSettings(false)
-                              // Add delete team functionality here
-                              if (confirm('Are you sure you want to delete this team? This action cannot be undone.'))
-                                alert('Delete team functionality coming soon!')
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            Delete Team
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+
             </div>
           </div>
         </div>
