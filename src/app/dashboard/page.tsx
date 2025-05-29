@@ -43,8 +43,13 @@ export default function DashboardPage() {
     name: '',
     description: '',
     start_date: '',
-    end_date: ''
+    end_date: '',
+    assigned_to: ''
   })
+
+  // Edit project state
+  const [editingProject, setEditingProject] = useState<Project | null>(null)
+  const [showEditProject, setShowEditProject] = useState(false)
 
   const router = useRouter()
   const supabase = createSupabaseClient()
@@ -279,12 +284,28 @@ export default function DashboardPage() {
       }
 
       console.log('Project created successfully:', data)
+      
+      // If a team member was assigned, add them to the project
+      if (projectForm.assigned_to) {
+        const { error: memberError } = await supabase
+          .from('project_members')
+          .insert({
+            project_id: data.id,
+            user_id: projectForm.assigned_to
+          })
+        
+        if (memberError) {
+          console.error('Error adding team member to project:', memberError)
+        }
+      }
+      
       setProjects([data, ...projects])
       setProjectForm({
         name: '',
         description: '',
         start_date: '',
-        end_date: ''
+        end_date: '',
+        assigned_to: ''
       })
       setShowCreateProject(false)
     } catch (err) {
@@ -305,7 +326,68 @@ export default function DashboardPage() {
   }
 
   const handleProjectClick = (project: Project) => {
-    router.push(`/project/${project.id}`)
+    setEditingProject(project)
+    setProjectForm({
+      name: project.name,
+      description: project.description || '',
+      start_date: project.start_date,
+      end_date: project.end_date,
+      assigned_to: ''
+    })
+    setShowEditProject(true)
+  }
+
+  const updateProject = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingProject || !profile) {
+      console.error('No project or profile found')
+      return
+    }
+
+    if (!projectForm.name.trim() || !projectForm.start_date || !projectForm.end_date) {
+      alert('Please fill in all required fields')
+      return
+    }
+
+    if (new Date(projectForm.end_date) <= new Date(projectForm.start_date)) {
+      alert('End date must be after start date')
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .update({
+          name: projectForm.name.trim(),
+          description: projectForm.description.trim() || null,
+          start_date: projectForm.start_date,
+          end_date: projectForm.end_date,
+        })
+        .eq('id', editingProject.id)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error updating project:', error)
+        alert('Error updating project')
+        return
+      }
+
+      // Update the projects list
+      setProjects(projects.map(p => p.id === editingProject.id ? data : p))
+      setShowEditProject(false)
+      setEditingProject(null)
+      setProjectForm({
+        name: '',
+        description: '',
+        start_date: '',
+        end_date: '',
+        assigned_to: ''
+      })
+    } catch (err) {
+      console.error('Unexpected error updating project:', err)
+      alert(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    }
   }
 
   const getProjectPosition = (project: Project, weekIndex: number) => {
@@ -563,6 +645,22 @@ export default function DashboardPage() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Assign to Team Member</label>
+                <select
+                  value={projectForm.assigned_to}
+                  onChange={(e) => setProjectForm({...projectForm, assigned_to: e.target.value})}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                >
+                  <option value="">Unassigned</option>
+                  {teamMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.full_name || member.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Start Date</label>
@@ -597,6 +695,89 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreateProject(false)}
+                  className="flex-1 border border-border text-foreground py-2 px-4 rounded-lg font-semibold hover:bg-accent transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Project Modal */}
+      {showEditProject && editingProject && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card p-6 rounded-lg border border-border max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold mb-4">Edit Project</h3>
+            <form onSubmit={updateProject} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Project Name</label>
+                <input
+                  type="text"
+                  value={projectForm.name}
+                  onChange={(e) => setProjectForm({...projectForm, name: e.target.value})}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                  placeholder="Enter project name"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+                <textarea
+                  value={projectForm.description}
+                  onChange={(e) => setProjectForm({...projectForm, description: e.target.value})}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                  placeholder="Enter project description"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={projectForm.start_date}
+                    onChange={(e) => setProjectForm({...projectForm, start_date: e.target.value})}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={projectForm.end_date}
+                    onChange={(e) => setProjectForm({...projectForm, end_date: e.target.value})}
+                    className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  type="submit"
+                  className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  Update Project
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditProject(false)
+                    setEditingProject(null)
+                    setProjectForm({
+                      name: '',
+                      description: '',
+                      start_date: '',
+                      end_date: '',
+                      assigned_to: ''
+                    })
+                  }}
                   className="flex-1 border border-border text-foreground py-2 px-4 rounded-lg font-semibold hover:bg-accent transition-colors"
                 >
                   Cancel
