@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { Plus, LogOut, Users, Calendar } from 'lucide-react'
+import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus } from 'lucide-react'
 import Link from 'next/link'
 
 interface Profile {
@@ -12,22 +12,75 @@ interface Profile {
   full_name: string | null
 }
 
-interface Team {
+interface Project {
   id: string
   name: string
+  description: string | null
   admin_id: string
   created_at: string
 }
 
+interface Task {
+  id: string
+  project_id: string
+  name: string
+  description: string | null
+  assigned_to: string | null
+  start_date: string
+  end_date: string
+  progress: number
+  status: 'not_started' | 'in_progress' | 'completed'
+  project?: Project
+  assignee?: {
+    full_name: string | null
+    email: string
+  }
+}
+
+interface TeamMember {
+  id: string
+  full_name: string | null
+  email: string
+}
+
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [teams, setTeams] = useState<Team[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
-  const [showCreateTeam, setShowCreateTeam] = useState(false)
-  const [newTeamName, setNewTeamName] = useState('')
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [showCreateProject, setShowCreateProject] = useState(false)
+  
+  // Project form state
+  const [projectForm, setProjectForm] = useState({
+    name: '',
+    description: ''
+  })
 
   const router = useRouter()
   const supabase = createSupabaseClient()
+
+  // Generate weeks for the timeline
+  const generateWeeks = (startDate: Date, numWeeks: number = 16) => {
+    const weeks = []
+    const current = new Date(startDate)
+    current.setDate(current.getDate() - current.getDay()) // Start from Sunday
+    
+    for (let i = 0; i < numWeeks; i++) {
+      weeks.push(new Date(current))
+      current.setDate(current.getDate() + 7)
+    }
+    return weeks
+  }
+
+  const weeks = generateWeeks(currentDate)
+
+  const getWeekNumber = (date: Date) => {
+    const start = new Date(date.getFullYear(), 0, 1)
+    const diff = date.getTime() - start.getTime()
+    return Math.ceil(diff / (7 * 24 * 60 * 60 * 1000))
+  }
 
   useEffect(() => {
     const getUser = async () => {
@@ -75,13 +128,13 @@ export default function DashboardPage() {
             } else {
               console.log('Profile created successfully:', newProfile)
               setProfile(newProfile)
-              await loadTeams(newProfile)
+              await loadData(newProfile)
             }
           }
         } else if (profileData) {
           console.log('Profile loaded:', profileData)
           setProfile(profileData)
-          await loadTeams(profileData)
+          await loadData(profileData)
         }
       } catch (err) {
         console.error('Unexpected error in getUser:', err)
@@ -93,99 +146,185 @@ export default function DashboardPage() {
     getUser()
   }, [router, supabase])
 
-  const loadTeams = async (userProfile: Profile) => {
+  const loadData = async (userProfile: Profile) => {
+    await Promise.all([
+      loadProjects(userProfile),
+      loadTeamMembers(userProfile)
+    ])
+  }
+
+  const loadProjects = async (userProfile: Profile) => {
     try {
-      // Get teams user created (as admin)
-      const { data: ownedTeams, error: ownedError } = await supabase
-        .from('teams')
+      // Get projects user created (as admin) or is a member of
+      const { data: ownedProjects, error: ownedError } = await supabase
+        .from('projects')
         .select('*')
         .eq('admin_id', userProfile.id)
         .order('created_at', { ascending: false })
       
       if (ownedError) {
-        console.error('Error loading owned teams:', ownedError)
+        console.error('Error loading owned projects:', ownedError)
       }
       
-      // Get teams user is a member of
+      // Get projects user is a member of
       const { data: memberData, error: memberError } = await supabase
-        .from('team_members')
+        .from('project_members')
         .select(`
-          team_id,
-          teams!inner(*)
+          project_id,
+          projects!inner(*)
         `)
         .eq('user_id', userProfile.id)
       
       if (memberError) {
-        console.error('Error loading member teams:', memberError)
+        console.error('Error loading member projects:', memberError)
       }
       
-      // Combine owned teams and member teams
-      const memberTeams = memberData?.map(m => m.teams).filter(Boolean) || []
-      const allTeams = [...(ownedTeams || []), ...memberTeams]
+      // Combine owned projects and member projects
+      const memberProjects = memberData?.map(m => m.projects).filter(Boolean) || []
+      const allProjects = [...(ownedProjects || []), ...memberProjects]
       
-      // Remove duplicates based on team id
-      const uniqueTeams = allTeams.filter((team, index, self) => 
-        index === self.findIndex(t => t.id === team.id)
+      // Remove duplicates based on project id
+      const uniqueProjects = allProjects.filter((project, index, self) => 
+        index === self.findIndex(p => p.id === project.id)
       )
       
-      console.log('Loaded teams:', uniqueTeams)
-      setTeams(uniqueTeams)
+      console.log('Loaded projects:', uniqueProjects)
+      setProjects(uniqueProjects)
+      
+      // Load tasks for these projects
+      if (uniqueProjects.length > 0) {
+        await loadTasks(uniqueProjects.map(p => p.id))
+      }
     } catch (err) {
-      console.error('Unexpected error loading teams:', err)
+      console.error('Unexpected error loading projects:', err)
     }
   }
 
-  const createTeam = async (e: React.FormEvent) => {
+  const loadTasks = async (projectIds: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          project:projects (
+            id,
+            name
+          ),
+          assignee:profiles!tasks_assigned_to_fkey (
+            full_name,
+            email
+          )
+        `)
+        .in('project_id', projectIds)
+        .not('assigned_to', 'is', null)
+        .order('start_date', { ascending: true })
+
+      if (error) {
+        console.error('Error loading tasks:', error)
+      } else {
+        setTasks(data || [])
+      }
+    } catch (err) {
+      console.error('Unexpected error loading tasks:', err)
+    }
+  }
+
+  const loadTeamMembers = async (userProfile: Profile) => {
+    try {
+      // Get all unique team members from all projects
+      const { data, error } = await supabase
+        .from('project_members')
+        .select(`
+          profiles (
+            id,
+            full_name,
+            email
+          )
+        `)
+        .in('project_id', projects.map(p => p.id))
+
+      if (error) {
+        console.error('Error loading team members:', error)
+        return
+      }
+
+      const members: TeamMember[] = data?.map((item: { profiles: TeamMember | TeamMember[] }) => {
+        const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+        return profile
+      }).filter(Boolean) || []
+      
+      // Add current user if not already included
+      if (!members.find((m: TeamMember) => m.id === userProfile.id)) {
+        members.unshift(userProfile as TeamMember)
+      }
+
+      // Remove duplicates
+      const uniqueMembers = members.filter((member, index, self) => 
+        index === self.findIndex(m => m.id === member.id)
+      )
+
+      setTeamMembers(uniqueMembers)
+    } catch (err) {
+      console.error('Unexpected error loading team members:', err)
+    }
+  }
+
+  const createProject = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!profile) {
       console.error('No profile found')
       return
     }
 
-    if (!newTeamName.trim()) {
-      console.error('Team name is required')
+    if (!projectForm.name.trim()) {
+      console.error('Project name is required')
       return
     }
 
     try {
-      console.log('Creating team with data:', {
-        name: newTeamName,
+      console.log('Creating project with data:', {
+        name: projectForm.name,
+        description: projectForm.description,
         admin_id: profile.id,
       })
 
       const { data, error } = await supabase
-        .from('teams')
+        .from('projects')
         .insert({
-          name: newTeamName.trim(),
+          name: projectForm.name.trim(),
+          description: projectForm.description.trim() || null,
           admin_id: profile.id,
         })
         .select()
         .single()
 
       if (error) {
-        console.error('Supabase error creating team:', {
+        console.error('Supabase error creating project:', {
           error,
           message: error.message,
           details: error.details,
           hint: error.hint,
           code: error.code
         })
-        alert(`Error creating team: ${error.message || 'Unknown error'}`)
+        alert(`Error creating project: ${error.message || 'Unknown error'}`)
         return
       }
 
       if (!data) {
-        console.error('No data returned from team creation')
-        alert('Error: No data returned from team creation')
+        console.error('No data returned from project creation')
+        alert('Error: No data returned from project creation')
         return
       }
 
-      console.log('Team created successfully:', data)
-      setTeams([data, ...teams])
-      setNewTeamName('')
-      setShowCreateTeam(false)
+      console.log('Project created successfully:', data)
+      setProjects([data, ...projects])
+      setProjectForm({
+        name: '',
+        description: ''
+      })
+      setShowCreateProject(false)
     } catch (err) {
-      console.error('Unexpected error creating team:', err)
+      console.error('Unexpected error creating project:', err)
       alert(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
@@ -195,8 +334,67 @@ export default function DashboardPage() {
     router.push('/')
   }
 
-  const isTeamAdmin = (team: Team) => {
-    return team.admin_id === profile?.id
+  const navigateWeeks = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate)
+    newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7))
+    setCurrentDate(newDate)
+  }
+
+  const getTasksForMember = (memberId: string) => {
+    return tasks.filter(task => task.assigned_to === memberId)
+  }
+
+  const getTaskPosition = (task: Task, weekIndex: number) => {
+    const taskStart = new Date(task.start_date)
+    const taskEnd = new Date(task.end_date)
+    const weekStart = weeks[weekIndex]
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekEnd.getDate() + 6)
+
+    // Check if task overlaps with this week
+    if (taskEnd < weekStart || taskStart > weekEnd) {
+      return null
+    }
+
+    // Calculate overlap percentage
+    const overlapStart = new Date(Math.max(taskStart.getTime(), weekStart.getTime()))
+    const overlapEnd = new Date(Math.min(taskEnd.getTime(), weekEnd.getTime()))
+    const overlapDays = (overlapEnd.getTime() - overlapStart.getTime()) / (24 * 60 * 60 * 1000) + 1
+    const weekDays = 7
+    const percentage = Math.min(100, (overlapDays / weekDays) * 100)
+
+    return {
+      percentage,
+      isStart: taskStart >= weekStart && taskStart <= weekEnd,
+      isEnd: taskEnd >= weekStart && taskEnd <= weekEnd,
+      task
+    }
+  }
+
+  const getMemberCapacity = (memberId: string, weekIndex: number) => {
+    const memberTasks = getTasksForMember(memberId)
+    let totalAllocation = 0
+
+    memberTasks.forEach(task => {
+      const position = getTaskPosition(task, weekIndex)
+      if (position) {
+        // Assume each task takes a certain percentage of time
+        totalAllocation += (position.percentage / 100) * 50 // Assuming 50% allocation per task
+      }
+    })
+
+    return Math.min(100, totalAllocation)
+  }
+
+  const getAvailableCapacity = (memberId: string, weekIndex: number) => {
+    const usedCapacity = getMemberCapacity(memberId, weekIndex)
+    return Math.max(0, 100 - usedCapacity)
+  }
+
+  const formatWeekHeader = (date: Date) => {
+    const month = date.toLocaleDateString('en-US', { month: 'short' })
+    const day = date.getDate()
+    return `${month}-${String(day).padStart(2, '0')}`
   }
 
   if (loading) {
@@ -204,7 +402,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Users className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Loading your dashboard...</p>
+          <p className="text-muted-foreground">Loading your team Gantt chart...</p>
         </div>
       </div>
     )
@@ -214,140 +412,313 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Users className="h-8 w-8 text-primary" />
-            <h1 className="text-xl font-bold">Team Dashboard</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">
-              Welcome, {profile?.full_name || profile?.email}
-            </span>
-            <button
-              onClick={signOut}
-              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
-            </button>
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Users className="h-8 w-8 text-primary" />
+              <div>
+                <h1 className="text-xl font-bold">Team Gantt Chart</h1>
+                <p className="text-sm text-muted-foreground">
+                  {projects.length} projects • {teamMembers.length} team members
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-muted-foreground">
+                Welcome, {profile?.full_name || profile?.email}
+              </span>
+              <button
+                onClick={signOut}
+                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Teams Header */}
-        <div className="flex justify-between items-center mb-8">
+      <div className="container mx-auto px-4 py-6">
+        {/* Projects Header */}
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-3xl font-bold text-foreground">
-              Your Teams
-            </h2>
-            <p className="text-muted-foreground mt-2">
-              Teams you lead or are a member of
-            </p>
+            <h2 className="text-2xl font-bold text-foreground">Your Projects</h2>
+            <p className="text-muted-foreground">Manage your team&apos;s projects and track progress</p>
           </div>
-          <button
-            onClick={() => setShowCreateTeam(true)}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center space-x-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Team</span>
-          </button>
-        </div>
-
-        {/* Create Team Modal */}
-        {showCreateTeam && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-card p-6 rounded-lg border border-border max-w-md w-full mx-4">
-              <h3 className="text-xl font-bold mb-4">Create New Team</h3>
-              <form onSubmit={createTeam} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Team Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newTeamName}
-                    onChange={(e) => setNewTeamName(e.target.value)}
-                    className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
-                    placeholder="Enter team name"
-                    required
-                  />
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
-                  >
-                    Create Team
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateTeam(false)}
-                    className="flex-1 border border-border text-foreground py-2 px-4 rounded-lg font-semibold hover:bg-accent transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Teams Grid */}
-        {teams.length === 0 ? (
-          <div className="text-center py-12">
-            <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">
-              No Teams Yet
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              Create your first team to start managing projects and tasks
-            </p>
+          <div className="flex items-center space-x-3">
             <button
-              onClick={() => setShowCreateTeam(true)}
-              className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+              onClick={() => setShowCreateProject(true)}
+              className="flex items-center space-x-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
             >
-              Create Your First Team
+              <FolderPlus className="h-4 w-4" />
+              <span>New Project</span>
+            </button>
+            <button
+              onClick={() => navigateWeeks('prev')}
+              className="p-2 border border-border rounded-lg hover:bg-accent transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-sm font-medium px-3 py-2 bg-accent rounded-lg">
+              {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </span>
+            <button
+              onClick={() => navigateWeeks('next')}
+              className="p-2 border border-border rounded-lg hover:bg-accent transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {teams.map((team) => (
-              <div key={team.id} className="bg-card p-6 rounded-lg border border-border hover:border-primary/50 transition-colors">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-foreground">{team.name}</h3>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        isTeamAdmin(team)
-                          ? 'bg-primary/10 text-primary'
-                          : 'bg-secondary/10 text-secondary-foreground'
-                      }`}>
-                        {isTeamAdmin(team) ? 'Team Leader' : 'Team Member'}
-                      </span>
-                    </div>
-                  </div>
+        </div>
 
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>{new Date(team.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/team/${team.id}`}
-                    className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
-                  >
-                    Open Team
-                  </Link>
+        {/* Projects List */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {projects.map((project) => (
+            <div key={project.id} className="bg-card p-4 rounded-lg border border-border hover:border-primary/50 transition-colors">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-foreground">{project.name}</h3>
+                  {project.description && (
+                    <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
+                  )}
                 </div>
               </div>
-            ))}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>{new Date(project.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                <Link
+                  href={`/project/${project.id}`}
+                  className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  Open
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Gantt Chart */}
+        {teamMembers.length > 0 && tasks.length > 0 ? (
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
+            <div className="p-4 border-b border-border">
+              <h3 className="text-lg font-semibold">Team Gantt Chart</h3>
+            </div>
+            
+            {/* Header Row */}
+            <div className="grid grid-cols-[300px_repeat(16,80px)] gap-0 border-b border-border bg-muted/50">
+              <div className="p-3 border-r border-border">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">Person</span>
+                  <span className="text-xs text-muted-foreground">▼</span>
+                </div>
+              </div>
+              <div className="p-3 border-r border-border">
+                <span className="text-sm font-medium">Project</span>
+              </div>
+              <div className="p-3 border-r border-border">
+                <span className="text-sm font-medium">Week Start</span>
+              </div>
+              <div className="p-3 border-r border-border">
+                <span className="text-sm font-medium">Week End</span>
+              </div>
+              <div className="p-3 border-r border-border">
+                <span className="text-sm font-medium">Allocation</span>
+              </div>
+              {weeks.slice(0, 12).map((week, index) => (
+                <div key={index} className="p-2 text-center border-r border-border">
+                  <div className="text-xs font-medium">{formatWeekHeader(week)}</div>
+                  <div className="text-xs text-muted-foreground">{getWeekNumber(week)}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Data Rows */}
+            <div className="max-h-[600px] overflow-y-auto">
+              {teamMembers.map((member) => {
+                const memberTasks = getTasksForMember(member.id)
+                const memberProjects = [...new Set(memberTasks.map(task => task.project?.name).filter(Boolean))]
+                
+                return (
+                  <div key={member.id}>
+                    {/* Member's Projects */}
+                    {memberProjects.map((projectName, projectIndex) => {
+                      const projectTasks = memberTasks.filter(task => task.project?.name === projectName)
+                      const firstTask = projectTasks[0]
+                      const lastTask = projectTasks[projectTasks.length - 1]
+                      
+                      return (
+                        <div key={`${member.id}-${projectName}`} className="grid grid-cols-[300px_repeat(16,80px)] gap-0 border-b border-border hover:bg-muted/30">
+                          <div className="p-3 border-r border-border">
+                            <span className="text-sm font-medium">
+                              {projectIndex === 0 ? (member.full_name || member.email) : ''}
+                            </span>
+                          </div>
+                          <div className="p-3 border-r border-border">
+                            <span className="text-sm">{projectName}</span>
+                          </div>
+                          <div className="p-3 border-r border-border">
+                            <span className="text-sm">
+                              {firstTask ? getWeekNumber(new Date(firstTask.start_date)) : '-'}
+                            </span>
+                          </div>
+                          <div className="p-3 border-r border-border">
+                            <span className="text-sm">
+                              {lastTask ? getWeekNumber(new Date(lastTask.end_date)) : '-'}
+                            </span>
+                          </div>
+                          <div className="p-3 border-r border-border">
+                            <span className="text-sm">
+                              {projectTasks.length > 0 ? '50%' : '0%'}
+                            </span>
+                          </div>
+                          {weeks.slice(0, 12).map((week, weekIndex) => {
+                            const capacity = getMemberCapacity(member.id, weekIndex)
+                            const hasTask = projectTasks.some(task => getTaskPosition(task, weekIndex))
+                            
+                            return (
+                              <div key={weekIndex} className="p-1 border-r border-border">
+                                {hasTask && (
+                                  <div className="h-6 relative">
+                                    <div 
+                                      className="h-full rounded bg-blue-500 flex items-center justify-center"
+                                      style={{ width: `${Math.min(100, capacity)}%` }}
+                                    >
+                                      <span className="text-xs text-white font-medium">
+                                        {capacity > 0 ? `${Math.round(capacity)}%` : ''}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    })}
+                    
+                    {/* Available Capacity Row */}
+                    <div className="grid grid-cols-[300px_repeat(16,80px)] gap-0 border-b border-border bg-green-50/50">
+                      <div className="p-3 border-r border-border">
+                        <span className="text-sm font-medium text-green-700">
+                          {memberProjects.length === 0 ? (member.full_name || member.email) : ''}
+                        </span>
+                      </div>
+                      <div className="p-3 border-r border-border">
+                        <span className="text-sm text-green-700">Available Capacity</span>
+                      </div>
+                      <div className="p-3 border-r border-border"></div>
+                      <div className="p-3 border-r border-border"></div>
+                      <div className="p-3 border-r border-border"></div>
+                      {weeks.slice(0, 12).map((week, weekIndex) => {
+                        const availableCapacity = getAvailableCapacity(member.id, weekIndex)
+                        
+                        return (
+                          <div key={weekIndex} className="p-1 border-r border-border">
+                            <div className="h-6 relative">
+                              <div 
+                                className="h-full rounded bg-green-500 flex items-center justify-center"
+                                style={{ width: `${availableCapacity}%` }}
+                              >
+                                <span className="text-xs text-white font-medium">
+                                  {availableCapacity > 0 ? `${Math.round(availableCapacity)}%` : ''}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Legend */}
+            <div className="p-4 border-t border-border">
+              <div className="flex items-center space-x-6 text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                  <span>Project Allocation</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-green-500 rounded"></div>
+                  <span>Available Capacity</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-card rounded-lg border border-border">
+            <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              No Tasks Yet
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              Create projects and assign tasks to see your team&apos;s Gantt chart
+            </p>
+            <button
+              onClick={() => setShowCreateProject(true)}
+              className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Create Your First Project
+            </button>
           </div>
         )}
       </div>
+
+      {/* Create Project Modal */}
+      {showCreateProject && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card p-6 rounded-lg border border-border max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold mb-4">Create New Project</h3>
+            <form onSubmit={createProject} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Project Name</label>
+                <input
+                  type="text"
+                  value={projectForm.name}
+                  onChange={(e) => setProjectForm({...projectForm, name: e.target.value})}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                  placeholder="Enter project name"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+                <textarea
+                  value={projectForm.description}
+                  onChange={(e) => setProjectForm({...projectForm, description: e.target.value})}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                  placeholder="Enter project description"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  type="submit"
+                  className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  Create Project
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateProject(false)}
+                  className="flex-1 border border-border text-foreground py-2 px-4 rounded-lg font-semibold hover:bg-accent transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,35 +1,33 @@
 # Gantt Chart for Team Leader
 
-A modern SaaS application for team-based project management with Gantt chart functionality, built with Next.js, Tailwind CSS, and Supabase. This tool is specifically designed for team leaders to manage their teams and projects, replacing fragile Google Sheets with a robust, role-based team management system.
+A modern SaaS application for project management with Gantt chart functionality, built with Next.js, Tailwind CSS, and Supabase. This tool is specifically designed for team leaders to manage their projects and team members directly, replacing fragile Google Sheets with a robust, streamlined project management system.
 
 ## Features
 
 ### 🎯 Core Functionality
 - **Dark Theme UI** - Modern, professional dark interface
-- **Role-Based Access Control** - Team Leader and Team Member roles with appropriate permissions
-- **Team Management** - Create and manage multiple teams
-- **Project Management** - Create projects within teams
+- **Direct Project Management** - Each team leader manages their own projects directly
+- **Team Member Management** - Add team members to projects
 - **Task Assignment** - Assign tasks to team members with timeline management
 - **Progress Tracking** - Visual progress indicators and status updates
-- **Team Collaboration** - Add team members and manage permissions
+- **Team Gantt Chart** - Visual timeline showing all team member allocations
+- **Capacity Management** - Track team member workload and availability
 
 ### 👥 User Roles
 
 #### Team Leader
-- Full access to all team and project features
-- Create and manage teams
-- Create projects within their teams
-- Add/remove team members
+- Full access to all project features
+- Create and manage projects
+- Add/remove team members to projects
 - Assign tasks to any team member
 - View and edit all tasks
-- Manage team and project settings
+- View team Gantt chart with capacity planning
 
 #### Team Member
-- View teams they belong to
-- View projects within their teams
+- View projects they are assigned to
 - Update progress on assigned tasks only
 - View project timeline and team members
-- Cannot create teams or manage other users
+- Cannot create projects or manage other users
 
 ## Tech Stack
 
@@ -97,20 +95,15 @@ The application uses the following main tables:
 - Links to Supabase auth.users
 - Stores user information
 
-### `teams`
-- Team information and metadata
-- Owned by team leader users
-- Contains team name and timestamps
-
-### `team_members`
-- Junction table for team members
-- Links users to teams they belong to
-- Enables team collaboration
-
 ### `projects`
 - Project information and metadata
-- Belongs to teams
+- Owned by team leader users
 - Contains project name, description, and timestamps
+
+### `project_members`
+- Junction table for project team members
+- Links users to projects they belong to
+- Enables project collaboration
 
 ### `tasks`
 - Individual tasks within projects
@@ -125,17 +118,23 @@ The application uses the following main tables:
 - Role-based access control with Row Level Security (RLS)
 - Automatic profile creation on user signup
 
-### Team & Project Management
-- Team leaders can create unlimited teams
-- Team leaders can create projects within their teams
-- Team members are added to teams
-- Team-level access control ensures data security
+### Simplified Project Management
+- Team leaders create projects directly (no separate team entity)
+- Each team leader has one implicit team
+- Team members are added directly to projects
+- Project-level access control ensures data security
 
 ### Task Management
 - Visual task cards with progress indicators
 - Timeline management with start/end dates
 - Status tracking (Not Started, In Progress, Completed)
 - Progress percentage with visual slider controls
+
+### Team Gantt Chart
+- Visual timeline showing all team member allocations across projects
+- Capacity planning with available vs. allocated time
+- Week-by-week view with navigation controls
+- Color-coded project allocation and availability
 
 ### User Experience
 - Responsive design works on desktop and mobile
@@ -150,8 +149,7 @@ The application uses the following main tables:
 src/
 ├── app/
 │   ├── auth/           # Authentication pages
-│   ├── dashboard/      # Main team dashboard
-│   ├── team/[id]/      # Individual team pages
+│   ├── dashboard/      # Main dashboard with Gantt chart
 │   ├── project/[id]/   # Individual project pages
 │   ├── globals.css     # Global styles and theme
 │   ├── layout.tsx      # Root layout
@@ -196,10 +194,21 @@ The application can be deployed to any platform that supports Next.js:
 - **Input Validation** - Client and server-side validation
 - **HTTPS Enforcement** - Secure data transmission
 
+## Simplified Architecture
+
+This application follows a simplified architecture where:
+- Each team leader has one implicit team (no separate team entity)
+- Projects are owned directly by team leaders
+- Team members are added to specific projects
+- The dashboard shows a unified Gantt chart across all projects
+- Capacity planning is done at the team leader level
+
+This approach reduces complexity while maintaining all essential functionality for effective project management.
+
 ## Future Enhancements
 
 ### Planned Features
-- [ ] Visual Gantt chart with drag-and-drop
+- [ ] Enhanced visual Gantt chart with drag-and-drop
 - [ ] Task dependencies and critical path
 - [ ] File attachments and comments
 - [ ] Email notifications
