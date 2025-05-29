@@ -391,8 +391,8 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card rounded-lg border border-border max-w-md w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-card rounded-lg border border-border max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center space-x-3">
@@ -431,8 +431,8 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
         </div>
 
         {/* People with access */}
-        <div className="flex-1 overflow-hidden">
-          <div className="p-4">
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="p-4 pb-2">
             <h3 className="text-sm font-medium text-foreground mb-3">People with access</h3>
             
             {/* Search */}
@@ -451,7 +451,7 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
           </div>
 
           {/* Team members list */}
-          <div className="overflow-y-auto max-h-80">
+          <div className="flex-1 overflow-y-auto px-4 pb-2">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Users className="h-8 w-8 text-muted-foreground animate-pulse" />
@@ -462,7 +462,7 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
                 <p className="text-sm text-muted-foreground">No team members found</p>
               </div>
             ) : (
-              <div className="space-y-1 px-4">
+              <div className="space-y-1">
                 {filteredMembers.map((member) => (
                   <div key={member.id} className="flex items-center space-x-3 py-2 hover:bg-accent rounded-lg px-2">
                     {/* Avatar */}
