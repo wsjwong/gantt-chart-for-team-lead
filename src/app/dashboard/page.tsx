@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus, Edit } from 'lucide-react'
+import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus, Edit, Trash2 } from 'lucide-react'
 import TeamManagementModal from '@/components/TeamManagementModal'
 
 interface Profile {
@@ -420,6 +420,70 @@ export default function DashboardPage() {
     }
   }
 
+  const deleteProject = async () => {
+    if (!editingProject || !profile) {
+      console.error('No project or profile found')
+      return
+    }
+
+    // Only allow project admin to delete the project
+    if (editingProject.admin_id !== profile.id) {
+      alert('Only the project admin can delete this project')
+      return
+    }
+
+    const confirmDelete = confirm(
+      `Are you sure you want to delete "${editingProject.name}"?\n\nThis action cannot be undone and will remove all associated data.`
+    )
+
+    if (!confirmDelete) {
+      return
+    }
+
+    try {
+      // First, delete all project members
+      const { error: membersError } = await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', editingProject.id)
+
+      if (membersError) {
+        console.error('Error deleting project members:', membersError)
+        alert('Error deleting project members')
+        return
+      }
+
+      // Then delete the project itself
+      const { error: projectError } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', editingProject.id)
+
+      if (projectError) {
+        console.error('Error deleting project:', projectError)
+        alert('Error deleting project')
+        return
+      }
+
+      // Update the projects list
+      setProjects(projects.filter(p => p.id !== editingProject.id))
+      setShowEditProject(false)
+      setEditingProject(null)
+      setProjectForm({
+        name: '',
+        description: '',
+        start_date: '',
+        end_date: '',
+        assigned_to: ''
+      })
+
+      alert('Project deleted successfully')
+    } catch (err) {
+      console.error('Unexpected error deleting project:', err)
+      alert(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    }
+  }
+
   const getProjectPosition = (project: Project, weekIndex: number) => {
     const projectStart = new Date(project.start_date)
     const projectEnd = new Date(project.end_date)
@@ -824,6 +888,26 @@ export default function DashboardPage() {
                   Cancel
                 </button>
               </div>
+              
+              {/* Delete Project Section */}
+              {editingProject && profile && editingProject.admin_id === profile.id && (
+                <div className="pt-4 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-medium text-foreground">Danger Zone</h4>
+                      <p className="text-xs text-muted-foreground">Permanently delete this project</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={deleteProject}
+                      className="flex items-center space-x-2 bg-destructive text-destructive-foreground px-4 py-2 rounded-lg hover:bg-destructive/90 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete Project</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </div>
