@@ -65,6 +65,7 @@ A modern SaaS application for team capacity monitoring with Gantt chart function
 | **Database** | PostgreSQL with Row Level Security |
 | **Icons** | Lucide React |
 | **Hosting** | Vercel (recommended) |
+| **AI Integration** | Supabase MCP Server for AI assistants |
 
 ## Quick Start
 
@@ -111,6 +112,101 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` to see the application.
+
+## Supabase MCP Server Integration
+
+This project includes integration with the Supabase MCP (Model Context Protocol) Server, which enables AI assistants like Claude, Cursor, and Windsurf to directly interact with your Supabase project.
+
+### What is MCP?
+
+The Model Context Protocol (MCP) standardizes how Large Language Models (LLMs) communicate with external services like Supabase. It allows AI assistants to:
+- Manage database tables and schemas
+- Execute SQL queries and migrations
+- Deploy Edge Functions
+- Manage project configurations
+- Handle user authentication and permissions
+
+### Available Capabilities
+
+With the Supabase MCP server, AI assistants can:
+
+#### Project Management
+- List and manage Supabase projects
+- Get project details and configurations
+- Create new projects (with cost confirmation)
+- Pause and restore projects
+
+#### Database Operations
+- List tables and database schemas
+- Execute SQL queries for data retrieval
+- Apply database migrations for schema changes
+- Manage database extensions
+- View database logs for debugging
+
+#### Development Tools
+- Generate TypeScript types from database schema
+- Deploy and manage Edge Functions
+- Get project URLs and API keys
+- Handle branching for development workflows
+
+### Setup Instructions
+
+The MCP server is already configured for this project. To use it with your AI assistant:
+
+1. **Get your Supabase Personal Access Token**:
+   - Go to [Supabase Account Settings](https://supabase.com/dashboard/account/tokens)
+   - Create a new personal access token
+   - Give it a descriptive name like "AI Assistant MCP"
+
+2. **The server is configured in your MCP settings** with:
+   ```json
+   {
+     "mcpServers": {
+       "github.com/supabase-community/supabase-mcp": {
+         "command": "npx",
+         "args": [
+           "-y",
+           "@supabase/mcp-server-supabase@latest",
+           "--access-token",
+           "your_personal_access_token"
+         ]
+       }
+     }
+   }
+   ```
+
+3. **Available Projects**: The server has access to your Supabase projects including:
+   - **Gantt Chart for Team Lead** (Active) - This project
+   - Other projects in your Supabase account
+
+### Example AI Commands
+
+With the MCP server active, you can ask your AI assistant to:
+
+```
+"Show me the database tables in my Gantt Chart project"
+"Generate TypeScript types for my database schema"
+"Execute a query to show all active projects"
+"Apply a migration to add a new column to the tasks table"
+"Deploy an Edge Function for project notifications"
+```
+
+### Security & Permissions
+
+- The MCP server uses your personal access token for authentication
+- It respects all Supabase Row Level Security (RLS) policies
+- Database operations are executed with your user permissions
+- All actions are logged and auditable through Supabase
+
+### Benefits for Development
+
+- **Faster Development**: AI can help write and execute database queries
+- **Schema Management**: Automated migration generation and application
+- **Code Generation**: Auto-generate TypeScript types and API clients
+- **Debugging**: AI can analyze logs and suggest solutions
+- **Documentation**: AI can explain database schema and relationships
+
+This integration makes the Gantt Chart application more maintainable and allows for rapid development with AI assistance.
 
 ## Mock Data
 
