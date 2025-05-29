@@ -7,25 +7,29 @@ A modern SaaS application for project management with Gantt chart functionality,
 ### 🎯 Core Functionality
 - **Dark Theme UI** - Modern, professional dark interface
 - **Direct Project Management** - Each team leader manages their own projects directly
-- **Team Member Management** - Add team members to projects
+- **Team Member Management** - Add/remove team members to/from projects with dedicated team management page
+- **Task Assignment** - Create tasks and assign them to specific team members
 - **Project Timeline Tracking** - Visual project timelines with start and end dates
-- **Progress Tracking** - Automatic progress calculation based on project timeline
-- **Project Gantt Chart** - Visual timeline showing all project schedules
-- **Simple Project Planning** - Focus on project-level planning without complex task breakdown
+- **Task Progress Tracking** - Individual task progress with status tracking (pending, in progress, completed, blocked)
+- **Project Gantt Chart** - Visual timeline showing all project schedules with team member capacity
+- **Date-based Planning** - Use actual dates instead of week numbers for flexible day/week/month views
 
 ### 👥 User Roles
 
 #### Team Leader (Project Admin)
 - Full access to all project features
 - Create and manage projects with start/end dates
-- Add/remove team members to projects
-- Edit project details and timelines
-- View project Gantt chart
+- Add/remove team members to/from projects
+- Create tasks and assign them to team members
+- Edit project details, timelines, and task assignments
+- View project Gantt chart with team member capacity
+- Access dedicated team management page
 
 #### Team Member
 - View projects they are assigned to
-- View project timeline and team members
-- Cannot create projects or manage other users
+- View project timeline, team members, and assigned tasks
+- See task details including progress and deadlines
+- Cannot create projects, manage other users, or create tasks
 
 ## Tech Stack
 
@@ -86,26 +90,31 @@ Visit `http://localhost:3000` to see the application.
 
 ## Database Schema
 
-The application uses a simplified database schema focused on project-level management:
+The application uses a comprehensive database schema for project and task management:
 
 ### `profiles`
 - User profiles with role-based access
 - Links to Supabase auth.users
-- Stores user information
+- Stores user information (full_name, email)
 
 ### `projects`
 - Project information with start and end dates
-- Owned by team leader users
+- Owned by team leader users (admin_id)
 - Contains project name, description, timeline, and timestamps
-- **New fields**: `start_date`, `end_date` for project timeline
+- Fields: `start_date`, `end_date` for project timeline
 
 ### `project_members`
 - Junction table for project team members
 - Links users to projects they belong to
-- Enables project collaboration
+- Enables project collaboration and access control
 
-### Removed Tables
-- ~~`tasks`~~ - Removed to simplify project management to project-level only
+### `tasks`
+- Individual tasks within projects
+- Can be assigned to specific team members
+- Contains task details, timeline, progress, and status
+- Fields: `name`, `description`, `assigned_to`, `start_date`, `end_date`, `progress`, `status`
+- Status options: pending, in_progress, completed, blocked
+- Foreign key relationships to projects and profiles
 
 ## Key Features Explained
 
@@ -114,24 +123,31 @@ The application uses a simplified database schema focused on project-level manag
 - Role-based access control with Row Level Security (RLS)
 - Automatic profile creation on user signup
 
-### Simplified Project Management
+### Enhanced Project Management
 - Team leaders create projects with start and end dates
-- Each team leader has one implicit team
-- Team members are added directly to projects
-- Project-level access control ensures data security
-- **No task breakdown** - Focus on project-level planning
+- Comprehensive team member management with dedicated team page
+- Team members are added directly to projects with proper access control
+- Task creation and assignment to specific team members
+- Project-level and task-level progress tracking
+
+### Task Management
+- Create tasks within projects with detailed information
+- Assign tasks to specific team members
+- Track task progress with status updates (pending, in progress, completed, blocked)
+- Task timeline management with start and end dates
+- Visual task progress indicators
 
 ### Project Timeline Management
-- Simple project cards with start/end dates and duration
+- Project cards with start/end dates, duration, and team member count
 - Automatic progress calculation based on current date vs project timeline
 - Visual progress bars showing project completion percentage
-- Project editing with date validation
+- Project editing with date validation and team member management
 
-### Project Gantt Chart
-- Visual timeline showing all projects across time
-- Week-by-week view with navigation controls
-- Project overlap visualization
-- Clean, focused view without task complexity
+### Team Member Capacity Tracking
+- Visual representation of team member workload
+- Task assignment visibility across projects
+- Team member availability and allocation tracking
+- Gantt chart showing team member capacity over time
 
 ### User Experience
 - Responsive design works on desktop and mobile
@@ -147,7 +163,8 @@ src/
 ├── app/
 │   ├── auth/           # Authentication pages
 │   ├── dashboard/      # Main dashboard with project Gantt chart
-│   ├── project/[id]/   # Individual project pages (simplified)
+│   ├── project/[id]/   # Individual project pages with task management
+│   ├── team/           # Team member management page
 │   ├── globals.css     # Global styles and theme
 │   ├── layout.tsx      # Root layout
 │   └── page.tsx        # Landing page
@@ -170,13 +187,16 @@ All environment variables are documented in `.env.local`. Make sure to:
 
 ## Database Migration
 
-If you're upgrading from a previous version with task management, run the SQL migration:
+To set up the database schema, run the SQL commands from `supabase-schema.sql`:
 
 ```sql
--- Run the commands in database_migration.sql to:
--- 1. Add start_date and end_date columns to projects table
--- 2. Remove the tasks table
--- 3. Set up proper constraints
+-- Run the commands in supabase-schema.sql to:
+-- 1. Create profiles table with user information
+-- 2. Create projects table with timeline fields
+-- 3. Create project_members junction table
+-- 4. Create tasks table with assignment and progress tracking
+-- 5. Set up Row Level Security (RLS) policies
+-- 6. Create proper foreign key relationships
 ```
 
 ## Deployment
@@ -202,28 +222,29 @@ The application can be deployed to any platform that supports Next.js:
 - **Input Validation** - Client and server-side validation
 - **HTTPS Enforcement** - Secure data transmission
 
-## Simplified Architecture
+## Streamlined Architecture
 
-This application follows a simplified architecture where:
-- Each team leader manages projects directly (no separate team entity)
-- Projects have start and end dates instead of complex task breakdowns
-- Team members are added to specific projects
-- The dashboard shows a unified Gantt chart of all projects
-- Progress is calculated automatically based on project timeline
-- **Focus on project-level planning** rather than detailed task management
+This application follows a streamlined architecture where:
+- Each team leader manages projects directly with dedicated team management
+- Projects have clear timelines with optional task breakdown for better granularity
+- Team members are added to specific projects with task assignment capabilities
+- The dashboard shows a unified Gantt chart of all projects with team member capacity
+- Progress is calculated at both project and task levels
+- **Focus on essential project management** without overwhelming complexity
 
-This approach reduces complexity while maintaining essential functionality for effective high-level project management.
+This approach balances simplicity with functionality for effective project management.
 
-## Why Simplified?
+## Why This Approach?
 
-This version removes task management complexity to focus on:
-- **Project-level planning** - Better for high-level project oversight
-- **Simplified timeline management** - Just start and end dates
-- **Reduced cognitive load** - Fewer entities to manage
-- **Faster setup** - Projects can be created and tracked immediately
-- **Better for team leaders** - Focus on project outcomes rather than micro-management
+This implementation provides the right balance of features:
+- **Project-level oversight** - Clear project timelines and progress tracking
+- **Task-level granularity** - Optional task breakdown when needed
+- **Team member management** - Proper assignment and capacity tracking
+- **Date-based planning** - Use actual dates for flexible timeline views
+- **Streamlined workflow** - Focus on essential features without bloat
+- **Scalable design** - Can handle both simple and complex project structures
 
-Perfect for team leaders who need project visibility without the overhead of detailed task tracking.
+Perfect for team leaders who need comprehensive project visibility with the flexibility to add task details when necessary.
 
 ## Future Enhancements
 
