@@ -17,10 +17,15 @@ interface Project {
   admin_id: string
 }
 
-interface TeamMember extends Profile {
-  role: 'owner' | 'member'
+interface TeamMember {
+  id: string
+  email: string
+  full_name: string | null
+  created_at: string
+  role: 'owner' | 'member' | 'invited'
   projects: Project[]
   projectCount: number
+  isInvited?: boolean
 }
 
 interface TeamManagementModalProps {
@@ -82,6 +87,12 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
         `)
         .eq('projects.admin_id', currentUserId)
 
+      // Get invited users
+      const { data: invitedUsers } = await supabase
+        .from('invited_users')
+        .select('*')
+        .eq('invited_by', currentUserId)
+
       // Group by user and collect their projects
       const memberMap = new Map<string, TeamMember>()
 
@@ -115,6 +126,22 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
             member.projects.push(project)
             member.projectCount = member.projects.length
           }
+        })
+      }
+
+      // Add invited users as team members
+      if (invitedUsers) {
+        invitedUsers.forEach((invitedUser) => {
+          memberMap.set(invitedUser.id, {
+            id: invitedUser.id,
+            email: invitedUser.email,
+            full_name: null,
+            created_at: invitedUser.created_at,
+            role: 'invited',
+            projects: userProjects,
+            projectCount: userProjects.length,
+            isInvited: true
+          })
         })
       }
 
@@ -211,17 +238,35 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
       return
     }
 
-    if (confirm('Are you sure you want to remove this member from all your projects?')) {
-      const { error } = await supabase
-        .from('project_members')
-        .delete()
-        .eq('user_id', memberId)
-        .in('project_id', userProjects.map(p => p.id))
+    const member = teamMembers.find(m => m.id === memberId)
+    if (!member) return
 
-      if (error) {
-        console.error('Error removing team member:', error)
-        alert('Error removing team member')
-        return
+    if (confirm('Are you sure you want to remove this member from all your projects?')) {
+      if (member.role === 'invited') {
+        // Remove from invited_users table
+        const { error } = await supabase
+          .from('invited_users')
+          .delete()
+          .eq('id', memberId)
+
+        if (error) {
+          console.error('Error removing invited user:', error)
+          alert('Error removing invited user')
+          return
+        }
+      } else {
+        // Remove from project_members table
+        const { error } = await supabase
+          .from('project_members')
+          .delete()
+          .eq('user_id', memberId)
+          .in('project_id', userProjects.map(p => p.id))
+
+        if (error) {
+          console.error('Error removing team member:', error)
+          alert('Error removing team member')
+          return
+        }
       }
 
       await loadTeamMembers()
@@ -311,7 +356,7 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
                 {filteredMembers.map((member) => (
                   <div key={member.id} className="flex items-center space-x-3 py-2 hover:bg-gray-50 rounded-md px-2">
                     {/* Avatar */}
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${member.role === 'invited' ? 'bg-orange-500' : 'bg-green-500'}`}>
                       {(member.full_name || member.email).charAt(0).toUpperCase()}
                     </div>
                     
@@ -340,7 +385,9 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
                         <span className="text-xs text-gray-500 font-medium">Owner</span>
                       ) : (
                         <div className="flex items-center space-x-1">
-                          <span className="text-xs text-gray-500">Member</span>
+                          <span className={`text-xs ${member.role === 'invited' ? 'text-orange-600' : 'text-gray-500'}`}>
+                            {member.role === 'invited' ? 'Invited' : 'Member'}
+                          </span>
                           <button
                             onClick={() => removeMember(member.id)}
                             className="text-gray-400 hover:text-red-500 transition-colors"
