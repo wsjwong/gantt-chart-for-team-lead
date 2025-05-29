@@ -20,6 +20,8 @@ interface Project {
   start_date: string
   end_date: string
   created_at: string
+  assigned_user_id?: string
+  assigned_user_name?: string
 }
 
 interface TeamMember {
@@ -180,53 +182,59 @@ export default function DashboardPage() {
   }, [router, supabase])
 
   const loadData = async (userProfile: Profile) => {
-    await loadProjects(userProfile)
-    await loadTeamMembers(userProfile)
+    const projects = await loadProjects(userProfile)
+    await loadTeamMembers(userProfile, projects)
   }
 
   const loadProjects = async (userProfile: Profile) => {
     try {
-      // Get projects user created (as admin) or is a member of
-      const { data: ownedProjects, error: ownedError } = await supabase
+      // Get all projects with their assigned members
+      const { data: allProjectsData, error: projectsError } = await supabase
         .from('projects')
-        .select('*')
-        .eq('admin_id', userProfile.id)
+        .select(`
+          *,
+          project_members (
+            user_id,
+            profiles (
+              id,
+              full_name,
+              email
+            )
+          )
+        `)
+        .or(`admin_id.eq.${userProfile.id},project_members.user_id.eq.${userProfile.id}`)
         .order('created_at', { ascending: false })
       
-      if (ownedError) {
-        console.error('Error loading owned projects:', ownedError)
+      if (projectsError) {
+        console.error('Error loading projects:', projectsError)
+        return
       }
       
-      // Get projects user is a member of
-      const { data: memberData, error: memberError } = await supabase
-        .from('project_members')
-        .select(`
-          project_id,
-          projects!inner(*)
-        `)
-        .eq('user_id', userProfile.id)
-      
-      if (memberError) {
-        console.error('Error loading member projects:', memberError)
-      }
-      
-      // Combine owned projects and member projects
-      const memberProjects = memberData?.map(m => m.projects).filter(Boolean) || []
-      const allProjects = [...(ownedProjects || []), ...memberProjects]
+      // Process projects to include assignment information
+      const processedProjects: Project[] = (allProjectsData || []).map(project => {
+        const assignedMember = project.project_members?.[0]?.profiles
+        return {
+          ...project,
+          assigned_user_id: assignedMember?.id || null,
+          assigned_user_name: assignedMember?.full_name || assignedMember?.email || null
+        }
+      })
       
       // Remove duplicates based on project id
-      const uniqueProjects = allProjects.filter((project, index, self) => 
+      const uniqueProjects = processedProjects.filter((project, index, self) => 
         index === self.findIndex(p => p.id === project.id)
       )
       
-      console.log('Loaded projects:', uniqueProjects)
+      console.log('Loaded projects with assignments:', uniqueProjects)
       setProjects(uniqueProjects)
+      return uniqueProjects
     } catch (err) {
       console.error('Unexpected error loading projects:', err)
+      return []
     }
   }
 
-  const loadTeamMembers = async (userProfile: Profile) => {
+  const loadTeamMembers = async (userProfile: Profile, userProjects?: Project[]) => {
     try {
       // Get all unique team members from all projects where user is admin
       const { data: projectMembersData, error: membersError } = await supabase
@@ -238,7 +246,7 @@ export default function DashboardPage() {
             email
           )
         `)
-        .in('project_id', projects.filter(p => p.admin_id === userProfile.id).map(p => p.id))
+        .in('project_id', (userProjects || projects).filter(p => p.admin_id === userProfile.id).map(p => p.id))
 
       if (membersError) {
         console.error('Error loading project members:', membersError)
@@ -573,6 +581,58 @@ export default function DashboardPage() {
     return diffDays
   }
 
+  // Group projects by assigned person
+  const getProjectsByPerson = () => {
+    const groupedProjects: { [key: string]: { person: TeamMember | null, projects: Project[] } } = {}
+    
+    // Add all team members as potential groups
+    teamMembers.forEach(member => {
+      groupedProjects[member.id] = {
+        person: member,
+        projects: []
+      }
+    })
+    
+    // Add unassigned group
+    groupedProjects['unassigned'] = {
+      person: null,
+      projects: []
+    }
+    
+    // Group projects by assigned person
+    projects.forEach(project => {
+      const assignedId = project.assigned_user_id || 'unassigned'
+      if (groupedProjects[assignedId]) {
+        groupedProjects[assignedId].projects.push(project)
+      } else {
+        // If assigned person is not in team members, add to unassigned
+        groupedProjects['unassigned'].projects.push(project)
+      }
+    })
+    
+    // Filter out groups with no projects (except unassigned if it has projects)
+    return Object.entries(groupedProjects)
+      .filter(([key, group]) => group.projects.length > 0 || key === 'unassigned')
+      .map(([key, group]) => ({ key, ...group }))
+  }
+
+  // Calculate person's capacity for a specific week
+  const getPersonCapacity = (personProjects: Project[], weekIndex: number) => {
+    let totalCapacity = 0
+    const weekStart = weeks[weekIndex]
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekEnd.getDate() + 6)
+    
+    personProjects.forEach(project => {
+      const position = getProjectPosition(project, weekIndex)
+      if (position) {
+        totalCapacity += position.percentage
+      }
+    })
+    
+    return Math.min(100, totalCapacity)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -681,61 +741,125 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* Data Rows */}
-            <div className="max-h-[400px] overflow-y-auto">
-              {projects.map((project) => (
-                <div 
-                  key={project.id} 
-                  className="grid grid-cols-[300px_repeat(12,80px)] gap-0 border-b border-border hover:bg-muted/30 cursor-pointer transition-colors"
-                  onClick={() => handleProjectClick(project)}
-                >
-                  <div className="p-3 border-r border-border">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm font-medium">{project.name}</span>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
+            {/* Data Rows - Grouped by Person */}
+            <div className="max-h-[600px] overflow-y-auto">
+              {getProjectsByPerson().map((group) => (
+                <div key={group.key} className="border-b-2 border-border">
+                  {/* Person Header Row */}
+                  <div className="grid grid-cols-[300px_repeat(12,80px)] gap-0 border-b border-border bg-muted/20">
+                    <div className="p-3 border-r border-border">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-sm font-semibold text-foreground">
+                            {group.person ? (group.person.full_name || group.person.email) : 'Unassigned'}
+                          </span>
+                          <div className="text-xs text-muted-foreground">
+                            {group.projects.length} project{group.projects.length !== 1 ? 's' : ''}
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {calculateProjectDuration(project)} days
-                        </div>
+                        <Users className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <Edit className="h-4 w-4 text-muted-foreground" />
                     </div>
-                  </div>
-                  {weeks.slice(0, 12).map((week, weekIndex) => {
-                    const position = getProjectPosition(project, weekIndex)
-                    
-                    return (
-                      <div key={weekIndex} className="p-1 border-r border-border">
-                        {position && (
+                    {weeks.slice(0, 12).map((week, weekIndex) => {
+                      const capacity = getPersonCapacity(group.projects, weekIndex)
+                      const isOverCapacity = capacity > 100
+                      
+                      return (
+                        <div key={weekIndex} className="p-1 border-r border-border">
                           <div className="h-6 relative">
                             <div 
-                              className="h-full rounded bg-blue-500 flex items-center justify-center hover:bg-blue-600 transition-colors"
-                              style={{ width: `${position.percentage}%` }}
-                              title={`${project.name}: ${Math.round(position.percentage)}% of week - Click to manage`}
+                              className={`h-full rounded flex items-center justify-center ${
+                                isOverCapacity 
+                                  ? 'bg-red-500 hover:bg-red-600' 
+                                  : capacity > 80 
+                                  ? 'bg-yellow-500 hover:bg-yellow-600'
+                                  : capacity > 0
+                                  ? 'bg-green-500 hover:bg-green-600'
+                                  : 'bg-gray-200'
+                              } transition-colors`}
+                              style={{ width: `${Math.min(100, capacity)}%` }}
+                              title={`${group.person ? (group.person.full_name || group.person.email) : 'Unassigned'}: ${Math.round(capacity)}% capacity`}
                             >
-                              {position.percentage > 50 && (
+                              {capacity > 30 && (
                                 <span className="text-xs text-white font-medium">
-                                  {Math.round(position.percentage)}%
+                                  {Math.round(capacity)}%
                                 </span>
                               )}
                             </div>
                           </div>
-                        )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  
+                  {/* Projects under this person */}
+                  {group.projects.map((project) => (
+                    <div 
+                      key={project.id} 
+                      className="grid grid-cols-[300px_repeat(12,80px)] gap-0 border-b border-border hover:bg-muted/30 cursor-pointer transition-colors"
+                      onClick={() => handleProjectClick(project)}
+                    >
+                      <div className="p-3 border-r border-border pl-8">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-sm font-medium">{project.name}</span>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {calculateProjectDuration(project)} days
+                            </div>
+                          </div>
+                          <Edit className="h-4 w-4 text-muted-foreground" />
+                        </div>
                       </div>
-                    )
-                  })}
+                      {weeks.slice(0, 12).map((week, weekIndex) => {
+                        const position = getProjectPosition(project, weekIndex)
+                        
+                        return (
+                          <div key={weekIndex} className="p-1 border-r border-border">
+                            {position && (
+                              <div className="h-6 relative">
+                                <div 
+                                  className="h-full rounded bg-blue-500 flex items-center justify-center hover:bg-blue-600 transition-colors"
+                                  style={{ width: `${position.percentage}%` }}
+                                  title={`${project.name}: ${Math.round(position.percentage)}% of week - Click to manage`}
+                                >
+                                  {position.percentage > 50 && (
+                                    <span className="text-xs text-white font-medium">
+                                      {Math.round(position.percentage)}%
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
 
             {/* Legend */}
             <div className="p-4 border-t border-border">
-              <div className="flex items-center space-x-6 text-sm">
+              <div className="flex items-center space-x-6 text-sm flex-wrap gap-y-2">
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-blue-500 rounded"></div>
                   <span>Project Timeline</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-green-500 rounded"></div>
+                  <span>Normal Capacity (≤80%)</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+                  <span>High Capacity (80-100%)</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-red-500 rounded"></div>
+                  <span>Over Capacity (&gt;100%)</span>
                 </div>
               </div>
             </div>

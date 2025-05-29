@@ -4,7 +4,15 @@ A modern SaaS application for team capacity monitoring with Gantt chart function
 
 ## Recent Updates
 
-### Latest Fixes (v1.2.3)
+### Latest Features (v1.3.0)
+- **Person-Level Capacity View** - Gantt chart now groups projects by assigned team members for better capacity monitoring
+- **Visual Capacity Indicators** - Color-coded capacity bars showing normal (green), high (yellow), and over-capacity (red) workloads
+- **Team Member Workload Overview** - Each person shows their total capacity percentage across all assigned projects
+- **Hierarchical Project Display** - Projects are nested under their assigned team members with clear visual hierarchy
+- **Capacity Legend** - Clear legend showing project timelines and capacity level indicators
+- **Unassigned Projects Grouping** - Projects without assigned members are grouped separately for easy identification
+
+### Previous Fixes (v1.2.3)
 - **Fixed Database Error on User Signup** - Resolved critical issue where new user registration would fail due to duplicate email constraint violations
 - **Database Trigger Fix** - Updated `handle_new_user()` trigger function to properly handle existing users during signup
 - **RLS Policy Compatibility** - Removed manual profile creation from client code that conflicted with Row Level Security policies
