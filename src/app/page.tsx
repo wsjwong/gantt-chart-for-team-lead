@@ -332,9 +332,6 @@ export default function Home() {
       <footer className="border-t border-border py-8 px-4">
         <div className="container mx-auto text-center text-muted-foreground">
           <p>&copy; 2025 Gantt Chart for Team Lead. All rights reserved.</p>
-          <p className="mt-2 text-sm">
-            Modern SaaS application for team capacity monitoring • Built with Next.js 15, Tailwind CSS 4, and Supabase
-          </p>
         </div>
       </footer>
     </div>
