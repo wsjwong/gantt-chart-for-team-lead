@@ -28,6 +28,12 @@ DROP POLICY IF EXISTS "Project members can view tasks" ON tasks;
 DROP POLICY IF EXISTS "Project admins can manage all tasks" ON tasks;
 DROP POLICY IF EXISTS "Team members can view tasks" ON tasks;
 DROP POLICY IF EXISTS "Team admins can manage all tasks" ON tasks;
+DROP POLICY IF EXISTS "Team admins can view their projects" ON projects;
+DROP POLICY IF EXISTS "Team admins can create projects" ON projects;
+DROP POLICY IF EXISTS "Team admins can update their projects" ON projects;
+DROP POLICY IF EXISTS "Team admins can delete their projects" ON projects;
+DROP POLICY IF EXISTS "Users can view tasks they're assigned" ON tasks;
+DROP POLICY IF EXISTS "Users can update tasks they're assigned" ON tasks;
 
 -- Drop triggers
 DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
@@ -139,6 +145,17 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- Create indexes for better performance
+CREATE INDEX idx_teams_admin_id ON teams(admin_id);
+CREATE INDEX idx_team_members_team_id ON team_members(team_id);
+CREATE INDEX idx_team_members_user_id ON team_members(user_id);
+CREATE INDEX idx_projects_team_id ON projects(team_id);
+CREATE INDEX idx_projects_admin_id ON projects(admin_id);
+CREATE INDEX idx_tasks_project_id ON tasks(project_id);
+CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
+CREATE INDEX idx_tasks_start_date ON tasks(start_date);
+CREATE INDEX idx_tasks_end_date ON tasks(end_date);
+
 -- Enable Row Level Security
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
@@ -146,7 +163,7 @@ ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 
--- Simple policies first (no cross-table references)
+-- Basic policies - only simple column-based checks
 -- Profiles policies
 CREATE POLICY "Users can view their own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
@@ -157,7 +174,7 @@ CREATE POLICY "Users can update their own profile" ON profiles
 CREATE POLICY "Users can insert their own profile" ON profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Teams policies (simple ones first)
+-- Teams policies - only admin_id checks
 CREATE POLICY "Users can view teams they admin" ON teams
   FOR SELECT USING (admin_id = auth.uid());
 
@@ -170,102 +187,17 @@ CREATE POLICY "Admins can update their own teams" ON teams
 CREATE POLICY "Admins can delete their own teams" ON teams
   FOR DELETE USING (admin_id = auth.uid());
 
--- Team members policies (simple ones first)
+-- Team members policies - only user_id checks
 CREATE POLICY "Users can view their own team memberships" ON team_members
   FOR SELECT USING (user_id = auth.uid());
 
--- Projects policies (simple ones first)
-CREATE POLICY "Team admins can view their projects" ON projects
-  FOR SELECT USING (admin_id = auth.uid());
+-- Projects policies - only admin_id checks
+CREATE POLICY "Team admins can manage projects" ON projects
+  FOR ALL USING (admin_id = auth.uid());
 
-CREATE POLICY "Team admins can create projects" ON projects
-  FOR INSERT WITH CHECK (admin_id = auth.uid());
-
-CREATE POLICY "Team admins can update their projects" ON projects
-  FOR UPDATE USING (admin_id = auth.uid());
-
-CREATE POLICY "Team admins can delete their projects" ON projects
-  FOR DELETE USING (admin_id = auth.uid());
-
--- Tasks policies (simple ones first)
+-- Tasks policies - only assigned_to checks
 CREATE POLICY "Users can view tasks they're assigned" ON tasks
   FOR SELECT USING (assigned_to = auth.uid());
 
 CREATE POLICY "Users can update tasks they're assigned" ON tasks
   FOR UPDATE USING (assigned_to = auth.uid());
-
--- Create indexes for better performance
-CREATE INDEX idx_teams_admin_id ON teams(admin_id);
-CREATE INDEX idx_team_members_team_id ON team_members(team_id);
-CREATE INDEX idx_team_members_user_id ON team_members(user_id);
-CREATE INDEX idx_projects_team_id ON projects(team_id);
-CREATE INDEX idx_projects_admin_id ON projects(admin_id);
-CREATE INDEX idx_tasks_project_id ON tasks(project_id);
-CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
-CREATE INDEX idx_tasks_start_date ON tasks(start_date);
-CREATE INDEX idx_tasks_end_date ON tasks(end_date);
-
--- Now add more complex policies that reference other tables
--- These are added after all tables and indexes are created
-
--- Team members policies with cross-table references
-CREATE POLICY "Team admins can view all team memberships" ON team_members
-  FOR SELECT USING (
-    team_id IN (
-      SELECT id FROM teams WHERE admin_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Team admins can manage team memberships" ON team_members
-  FOR INSERT WITH CHECK (
-    team_id IN (
-      SELECT id FROM teams WHERE admin_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Team admins can update team memberships" ON team_members
-  FOR UPDATE USING (
-    team_id IN (
-      SELECT id FROM teams WHERE admin_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Team admins can delete team memberships" ON team_members
-  FOR DELETE USING (
-    team_id IN (
-      SELECT id FROM teams WHERE admin_id = auth.uid()
-    )
-  );
-
--- Teams policies with cross-table references
-CREATE POLICY "Team members can view teams" ON teams
-  FOR SELECT USING (
-    id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
-    )
-  );
-
--- Projects policies with cross-table references
-CREATE POLICY "Team members can view projects" ON projects
-  FOR SELECT USING (
-    team_id IN (
-      SELECT team_id FROM team_members WHERE user_id = auth.uid()
-    )
-  );
-
--- Tasks policies with cross-table references
-CREATE POLICY "Team admins can manage all tasks" ON tasks
-  FOR ALL USING (
-    project_id IN (
-      SELECT id FROM projects WHERE admin_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Team members can view tasks" ON tasks
-  FOR SELECT USING (
-    project_id IN (
-      SELECT p.id FROM projects p
-      JOIN team_members tm ON p.team_id = tm.team_id
-      WHERE tm.user_id = auth.uid()
-    )
-  );
