@@ -4,13 +4,6 @@ import { useState, useEffect } from 'react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { X, Users, Search, Crown, Trash2 } from 'lucide-react'
 
-interface Profile {
-  id: string
-  email: string
-  full_name: string | null
-  created_at: string
-}
-
 interface Project {
   id: string
   name: string
@@ -282,23 +275,23 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+      <div className="bg-card rounded-lg border border-border max-w-md w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center space-x-3">
-            <Users className="h-5 w-5 text-blue-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Manage Team</h2>
+            <Users className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Manage Team</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Add people input */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center space-x-2">
             <div className="flex-1 relative">
               <input
@@ -307,13 +300,13 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
                 value={addUserEmail}
                 onChange={(e) => setAddUserEmail(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && addUserByEmail()}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground text-sm"
               />
             </div>
             <button
               onClick={addUserByEmail}
               disabled={!addUserEmail.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
             >
               Add
             </button>
@@ -323,18 +316,18 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
         {/* People with access */}
         <div className="flex-1 overflow-hidden">
           <div className="p-4">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">People with access</h3>
+            <h3 className="text-sm font-medium text-foreground mb-3">People with access</h3>
             
             {/* Search */}
             {teamMembers.length > 3 && (
               <div className="relative mb-3">
-                <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search team members..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="pl-10 pr-4 py-2 w-full bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground text-sm"
                 />
               </div>
             )}
@@ -344,17 +337,17 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
           <div className="overflow-y-auto max-h-80">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <Users className="h-8 w-8 text-gray-400 animate-pulse" />
+                <Users className="h-8 w-8 text-muted-foreground animate-pulse" />
               </div>
             ) : filteredMembers.length === 0 ? (
               <div className="text-center py-8 px-4">
-                <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No team members found</p>
+                <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No team members found</p>
               </div>
             ) : (
               <div className="space-y-1 px-4">
                 {filteredMembers.map((member) => (
-                  <div key={member.id} className="flex items-center space-x-3 py-2 hover:bg-gray-50 rounded-md px-2">
+                  <div key={member.id} className="flex items-center space-x-3 py-2 hover:bg-accent rounded-lg px-2">
                     {/* Avatar */}
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${member.role === 'invited' ? 'bg-orange-500' : 'bg-green-500'}`}>
                       {(member.full_name || member.email).charAt(0).toUpperCase()}
@@ -363,7 +356,7 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
                     {/* User info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           {member.full_name || 'No Name'}
                           {member.id === currentUserId && ' (you)'}
                         </p>
@@ -371,9 +364,9 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
                           <Crown className="h-3 w-3 text-yellow-500" />
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                      <p className="text-xs text-muted-foreground truncate">{member.email}</p>
                       {member.projectCount > 0 && (
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           {member.projectCount} project{member.projectCount !== 1 ? 's' : ''}
                         </p>
                       )}
@@ -382,15 +375,15 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
                     {/* Role/Actions */}
                     <div className="flex items-center space-x-2">
                       {member.role === 'owner' ? (
-                        <span className="text-xs text-gray-500 font-medium">Owner</span>
+                        <span className="text-xs text-muted-foreground font-medium">Owner</span>
                       ) : (
                         <div className="flex items-center space-x-1">
-                          <span className={`text-xs ${member.role === 'invited' ? 'text-orange-600' : 'text-gray-500'}`}>
+                          <span className={`text-xs ${member.role === 'invited' ? 'text-orange-600' : 'text-muted-foreground'}`}>
                             {member.role === 'invited' ? 'Invited' : 'Member'}
                           </span>
                           <button
                             onClick={() => removeMember(member.id)}
-                            className="text-gray-400 hover:text-red-500 transition-colors"
+                            className="text-muted-foreground hover:text-destructive transition-colors"
                             title="Remove member"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -406,14 +399,14 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
         </div>
 
         {/* General access info */}
-        <div className="p-4 bg-blue-50 border-t border-gray-200">
+        <div className="p-4 bg-muted/50 border-t border-border">
           <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-              <Users className="h-4 w-4 text-green-600" />
+            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+              <Users className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Team Access</p>
-              <p className="text-xs text-gray-600">
+              <p className="text-sm font-medium text-foreground">Team Access</p>
+              <p className="text-xs text-muted-foreground">
                 Team members can view and collaborate on all your projects
               </p>
             </div>
@@ -421,10 +414,10 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 flex justify-end">
+        <div className="p-4 border-t border-border flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
           >
             Done
           </button>
