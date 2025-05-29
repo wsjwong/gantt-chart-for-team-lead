@@ -43,6 +43,8 @@ export interface Database {
           name: string
           description: string | null
           admin_id: string
+          start_date: string
+          end_date: string
           created_at: string
           updated_at: string
         }
@@ -51,6 +53,8 @@ export interface Database {
           name: string
           description?: string | null
           admin_id: string
+          start_date: string
+          end_date: string
           created_at?: string
           updated_at?: string
         }
@@ -59,6 +63,8 @@ export interface Database {
           name?: string
           description?: string | null
           admin_id?: string
+          start_date?: string
+          end_date?: string
           created_at?: string
           updated_at?: string
         }
@@ -93,7 +99,7 @@ export interface Database {
           start_date: string
           end_date: string
           progress: number
-          status: 'not_started' | 'in_progress' | 'completed'
+          status: 'pending' | 'in_progress' | 'completed' | 'blocked'
           dependencies: string[] | null
           created_at: string
           updated_at: string
@@ -107,7 +113,7 @@ export interface Database {
           start_date: string
           end_date: string
           progress?: number
-          status?: 'not_started' | 'in_progress' | 'completed'
+          status?: 'pending' | 'in_progress' | 'completed' | 'blocked'
           dependencies?: string[] | null
           created_at?: string
           updated_at?: string
@@ -121,12 +127,13 @@ export interface Database {
           start_date?: string
           end_date?: string
           progress?: number
-          status?: 'not_started' | 'in_progress' | 'completed'
+          status?: 'pending' | 'in_progress' | 'completed' | 'blocked'
           dependencies?: string[] | null
           created_at?: string
           updated_at?: string
         }
       }
+
     }
   }
 }
