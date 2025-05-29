@@ -508,7 +508,6 @@ export default function DashboardPage() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Project Timeline</h2>
-            <p className="text-muted-foreground">Click on any project in the chart to view details and manage tasks</p>
           </div>
           <div className="flex items-center space-x-3">
             <button
