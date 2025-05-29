@@ -11,12 +11,12 @@ export default function Home() {
           <div className="flex items-center space-x-2">
             <Image 
               src="/logo.png" 
-              alt="Gantt Chart for Team Leader" 
+              alt="Gantt Chart for Team Lead" 
               width={40} 
               height={40} 
               className="rounded-lg"
             />
-            <h1 className="text-xl font-bold">Gantt Chart for Team Leader</h1>
+            <h1 className="text-xl font-bold">Gantt Chart for Team Lead</h1>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -39,7 +39,7 @@ export default function Home() {
             Simplify Project Planning
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Replace fragile Google Sheets with a powerful Gantt chart tool designed for team leaders. 
+            Replace fragile Google Sheets with a powerful Gantt chart tool designed for team leads. 
             Assign tasks, track progress, and keep your team aligned.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -228,7 +228,7 @@ export default function Home() {
         <div className="container mx-auto text-center">
           <h3 className="text-3xl font-bold mb-6">Ready to Get Started?</h3>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of team leaders who have simplified their project management with our Gantt chart tool.
+            Join thousands of team leads who have simplified their project management with our Gantt chart tool.
           </p>
           <Link 
             href="/auth" 
@@ -243,7 +243,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p>&copy; 2025 Gantt Chart for Team Leader. All rights reserved.</p>
+          <p>&copy; 2025 Gantt Chart for Team Lead. All rights reserved.</p>
         </div>
       </footer>
     </div>

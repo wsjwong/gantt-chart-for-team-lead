@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gantt Chart for Team Leader",
+  title: "Gantt Chart for Team Lead",
   description: "Simplify project planning and team collaboration with our intuitive Gantt chart tool",
   icons: {
     icon: '/favicon-32x32.png',

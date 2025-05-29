@@ -1,6 +1,6 @@
-# Gantt Chart for Team Leader
+# Gantt Chart for Team Lead
 
-A modern SaaS application for project management with Gantt chart functionality, built with Next.js, Tailwind CSS, and Supabase. This tool is specifically designed for team leaders to manage their projects with simple project-based timelines, replacing complex task management with streamlined project tracking.
+A modern SaaS application for project management with Gantt chart functionality, built with Next.js, Tailwind CSS, and Supabase. This tool is specifically designed for team leads to manage their projects with simple project-based timelines, replacing complex task management with streamlined project tracking.
 
 ## Recent Updates
 
@@ -18,7 +18,7 @@ A modern SaaS application for project management with Gantt chart functionality,
 - **Professional Branding** - Custom logo integration with modern visual identity and properly aligned header navigation
 - **Dark Theme UI** - Modern, professional dark interface with consistent styling
 - **Pricing Transparency** - Clear pricing tiers with feature comparisons for different team sizes
-- **Direct Project Management** - Each team leader manages their own projects directly
+- **Direct Project Management** - Each team lead manages their own projects directly
 - **Team Member Management** - Add/remove team members to/from projects with consistent Google-style team management modal
 - **Project Assignment** - Assign team members to projects during creation and editing
 - **Invited User Support** - Invite users by email and assign them to projects before they accept the invitation
@@ -30,7 +30,7 @@ A modern SaaS application for project management with Gantt chart functionality,
 
 ### 👥 User Roles
 
-#### Team Leader (Project Admin)
+#### Team Lead (Project Admin)
 - Full access to all project features
 - Create and manage projects with start/end dates
 - Add/remove team members to/from projects via consistent modal interface

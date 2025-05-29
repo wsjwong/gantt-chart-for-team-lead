@@ -593,13 +593,13 @@ export default function DashboardPage() {
             <div className="flex items-center space-x-2">
               <Image 
                 src="/logo.png" 
-                alt="Gantt Chart for Team Leader" 
+                alt="Gantt Chart for Team Lead" 
                 width={40} 
                 height={40} 
                 className="rounded-lg"
               />
               <div>
-                <h1 className="text-xl font-bold">Gantt Chart for Team Leader</h1>
+                <h1 className="text-xl font-bold">Gantt Chart for Team Lead</h1>
                 <p className="text-sm text-muted-foreground">
                   {projects.length} projects • {teamMembers.length} team members
                 </p>
