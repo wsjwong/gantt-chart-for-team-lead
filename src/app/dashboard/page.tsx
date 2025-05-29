@@ -325,14 +325,23 @@ export default function DashboardPage() {
     setCurrentDate(newDate)
   }
 
-  const handleProjectClick = (project: Project) => {
+  const handleProjectClick = async (project: Project) => {
     setEditingProject(project)
+    
+    // Get current assigned team member for this project
+    const { data: memberData } = await supabase
+      .from('project_members')
+      .select('user_id')
+      .eq('project_id', project.id)
+      .limit(1)
+      .single()
+    
     setProjectForm({
       name: project.name,
       description: project.description || '',
       start_date: project.start_date,
       end_date: project.end_date,
-      assigned_to: ''
+      assigned_to: memberData?.user_id || ''
     })
     setShowEditProject(true)
   }
@@ -371,6 +380,27 @@ export default function DashboardPage() {
         console.error('Error updating project:', error)
         alert('Error updating project')
         return
+      }
+
+      // Handle team member assignment changes
+      // First, remove existing project members
+      await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', editingProject.id)
+      
+      // Then add the new assigned member if one was selected
+      if (projectForm.assigned_to) {
+        const { error: memberError } = await supabase
+          .from('project_members')
+          .insert({
+            project_id: editingProject.id,
+            user_id: projectForm.assigned_to
+          })
+        
+        if (memberError) {
+          console.error('Error updating team member assignment:', memberError)
+        }
       }
 
       // Update the projects list
@@ -732,6 +762,22 @@ export default function DashboardPage() {
                   placeholder="Enter project description"
                   rows={3}
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Assign to Team Member</label>
+                <select
+                  value={projectForm.assigned_to}
+                  onChange={(e) => setProjectForm({...projectForm, assigned_to: e.target.value})}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                >
+                  <option value="">Unassigned</option>
+                  {teamMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.full_name || member.email}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
