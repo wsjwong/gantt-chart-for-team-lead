@@ -244,43 +244,80 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
     }
 
     try {
-      // Check if user is already a team member
-      if (teamMembers.find(member => member.email === email)) {
-        alert('User is already a team member')
+      // Check if user is already an active team member (not just invited)
+      const activeMember = teamMembers.find(member => 
+        member.email === email && 
+        member.role !== 'invited' && 
+        member.invitation_status !== 'pending'
+      )
+      
+      if (activeMember) {
+        alert('User is already an active team member')
         return
       }
 
       // Try to find existing user by email
-      const { data: user } = await supabase
+      const { data: user, error: userError } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', email)
         .single()
 
-      if (user && user.invitation_status === 'accepted') {
-        // User exists and has accepted, add them to projects
-        const insertData = userProjects.map(project => ({
-          project_id: project.id,
-          user_id: user.id
-        }))
+      if (userError && userError.code !== 'PGRST116') {
+        console.error('Error checking user:', userError)
+        alert('Error checking user status')
+        return
+      }
 
-        if (insertData.length > 0) {
-          const { error } = await supabase
-            .from('project_members')
-            .insert(insertData)
+      if (user) {
+        if (user.invitation_status === 'accepted') {
+          // User exists and has accepted, add them to projects
+          const insertData = userProjects.map(project => ({
+            project_id: project.id,
+            user_id: user.id
+          }))
 
-          if (error) {
-            console.error('Error adding team member:', error)
-            alert('Error adding team member')
+          if (insertData.length > 0) {
+            const { error } = await supabase
+              .from('project_members')
+              .insert(insertData)
+
+            if (error) {
+              console.error('Error adding team member:', error)
+              alert('Error adding team member')
+              return
+            }
+          }
+          alert(`${email} has been added to your projects`)
+        } else if (user.invitation_status === 'pending') {
+          // User was previously invited, update the invitation
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              invited_by: currentUserId,
+              invited_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('email', email)
+
+          if (updateError) {
+            console.error('Error updating invitation:', updateError)
+            alert('Error updating invitation')
             return
           }
+          alert(`Invitation updated for ${email}. They will be added to your projects when they sign up.`)
         }
       } else {
-        // User doesn't exist or is pending, create invited user in profiles table
+        // User doesn't exist, create new invited user in profiles table
+        // Generate a UUID for the invited user
+        const invitedUserId = crypto.randomUUID()
+        
         const { error: inviteError } = await supabase
           .from('profiles')
           .insert({
+            id: invitedUserId,
             email: email,
+            full_name: email, // Use email as default name
             invitation_status: 'pending',
             invited_by: currentUserId,
             invited_at: new Date().toISOString(),
@@ -290,10 +327,9 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
 
         if (inviteError) {
           console.error('Error inviting user:', inviteError)
-          alert('Error inviting user. They may already be invited.')
+          alert('Error inviting user: ' + inviteError.message)
           return
         }
-
         alert(`Invitation sent to ${email}. They will be added to your projects when they sign up.`)
       }
 
@@ -301,7 +337,7 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
       await loadTeamMembers()
     } catch (error) {
       console.error('Error adding user:', error)
-      alert('Error adding user')
+      alert('Error adding user: ' + (error as Error).message)
     }
   }
 
