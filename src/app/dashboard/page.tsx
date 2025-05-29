@@ -101,27 +101,68 @@ export default function DashboardPage() {
           .single()
 
         if (profileError) {
-          console.error('Error getting profile:', profileError)
+          console.error('Error getting profile:', {
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint,
+            code: profileError.code,
+            userId: user.id
+          })
+          
           // If profile doesn't exist, create it
           if (profileError.code === 'PGRST116') {
             console.log('Profile not found, creating new profile')
+            
+            // Try to create profile with upsert to handle race conditions
             const { data: newProfile, error: createError } = await supabase
               .from('profiles')
-              .insert({
+              .upsert({
                 id: user.id,
                 email: user.email || '',
-                full_name: user.user_metadata?.full_name || null
+                full_name: user.user_metadata?.full_name || null,
+                invitation_status: 'accepted',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }, {
+                onConflict: 'id'
               })
               .select()
               .single()
             
             if (createError) {
-              console.error('Error creating profile:', createError)
+              console.error('Error creating profile:', {
+                message: createError.message,
+                details: createError.details,
+                hint: createError.hint,
+                code: createError.code
+              })
+              
+              // If creation fails, try to get the profile again (might have been created by another process)
+              const { data: retryProfile, error: retryError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single()
+              
+              if (retryError) {
+                console.error('Failed to create or retrieve profile:', retryError)
+                alert('Error accessing your profile. Please try refreshing the page or contact support.')
+                return
+              } else {
+                console.log('Profile retrieved on retry:', retryProfile)
+                setProfile(retryProfile)
+                await loadData(retryProfile)
+              }
             } else {
               console.log('Profile created successfully:', newProfile)
               setProfile(newProfile)
               await loadData(newProfile)
             }
+          } else {
+            // Other error - might be RLS policy issue
+            console.error('Profile access error (possibly RLS policy issue):', profileError)
+            alert('Unable to access your profile. This might be a permissions issue. Please try signing out and back in.')
+            return
           }
         } else if (profileData) {
           console.log('Profile loaded:', profileData)

@@ -21,6 +21,9 @@ export interface Database {
           full_name: string | null
           created_at: string
           updated_at: string
+          invitation_status: string | null
+          invited_by: string | null
+          invited_at: string | null
         }
         Insert: {
           id: string
@@ -28,6 +31,9 @@ export interface Database {
           full_name?: string | null
           created_at?: string
           updated_at?: string
+          invitation_status?: string | null
+          invited_by?: string | null
+          invited_at?: string | null
         }
         Update: {
           id?: string
@@ -35,6 +41,9 @@ export interface Database {
           full_name?: string | null
           created_at?: string
           updated_at?: string
+          invitation_status?: string | null
+          invited_by?: string | null
+          invited_at?: string | null
         }
       }
       projects: {

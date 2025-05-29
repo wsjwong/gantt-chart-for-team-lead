@@ -18,8 +18,8 @@ interface TeamMember {
   role: 'owner' | 'member' | 'invited'
   projects: Project[]
   projectCount: number
-  invitation_status?: 'pending' | 'accepted'
-  invited_by?: string
+  invitation_status?: string | null
+  invited_by?: string | null
 }
 
 interface TeamManagementModalProps {
@@ -46,8 +46,8 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
 
   const loadData = async () => {
     setLoading(true)
-    await loadUserProjects()
-    await loadTeamMembers()
+    const projects = await loadUserProjects()
+    await loadTeamMembers(projects)
 
     setLoading(false)
   }
@@ -58,35 +58,106 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
       .select('id, name, admin_id')
       .eq('admin_id', currentUserId)
 
-    setUserProjects(projects || [])
+    const projectsData = projects || []
+    setUserProjects(projectsData)
+    return projectsData
   }
 
-  const loadTeamMembers = async () => {
+  const loadTeamMembers = async (projects?: Project[]) => {
+    const userProjectsToUse = projects || userProjects
     try {
+      console.log('Loading team members for user:', currentUserId)
+      
       // Get current user profile first
-      const { data: currentUserProfile } = await supabase
+      const { data: currentUserProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUserId)
         .single()
 
+      if (profileError) {
+        console.error('Error loading current user profile:', profileError)
+      }
+
+      console.log('Current user profile:', currentUserProfile)
+      console.log('User projects:', userProjectsToUse)
+
       // Get all unique team members from projects where user is admin
-      const { data: projectMembersData } = await supabase
-        .from('project_members')
-        .select(`
-          user_id,
-          project_id,
-          projects!inner(id, name, admin_id),
-          profiles!inner(id, email, full_name, created_at, invitation_status, invited_by)
-        `)
-        .eq('projects.admin_id', currentUserId)
+      // First get project members for user's projects
+      const userProjectIds = userProjectsToUse.map(p => p.id)
+      console.log('User project IDs:', userProjectIds)
+
+      interface ProjectMemberData {
+        user_id: string
+        project_id: string
+        profiles: {
+          id: string
+          email: string
+          full_name: string | null
+          created_at: string
+          invitation_status: string | null
+          invited_by: string | null
+        }
+      }
+
+      let projectMembersData: ProjectMemberData[] = []
+      if (userProjectIds.length > 0) {
+        const { data, error: membersError } = await supabase
+          .from('project_members')
+          .select(`
+            user_id,
+            project_id,
+            profiles!inner(id, email, full_name, created_at, invitation_status, invited_by)
+          `)
+          .in('project_id', userProjectIds)
+
+        if (membersError) {
+          console.error('Error loading project members:', membersError)
+        } else {
+          // Transform the data to match our interface since Supabase returns profiles as an array
+          interface RawProjectMemberData {
+            user_id: string
+            project_id: string
+            profiles: {
+              id: string
+              email: string
+              full_name: string | null
+              created_at: string
+              invitation_status: string | null
+              invited_by: string | null
+            } | {
+              id: string
+              email: string
+              full_name: string | null
+              created_at: string
+              invitation_status: string | null
+              invited_by: string | null
+            }[]
+          }
+          
+          const transformedData = (data as RawProjectMemberData[] || []).map((item) => ({
+            user_id: item.user_id,
+            project_id: item.project_id,
+            profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+          }))
+          projectMembersData = transformedData as ProjectMemberData[]
+        }
+      }
+
+      console.log('Project members data:', projectMembersData)
 
       // Get invited users (now from profiles table)
-      const { data: invitedUsers } = await supabase
+      const { data: invitedUsers, error: invitedError } = await supabase
         .from('profiles')
         .select('*')
         .eq('invited_by', currentUserId)
         .eq('invitation_status', 'pending')
+
+      if (invitedError) {
+        console.error('Error loading invited users:', invitedError)
+      }
+
+      console.log('Invited users:', invitedUsers)
 
       // Group by user and collect their projects
       const memberMap = new Map<string, TeamMember>()
@@ -96,30 +167,33 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
         memberMap.set(currentUserId, {
           ...currentUserProfile,
           role: 'owner',
-          projects: userProjects,
-          projectCount: userProjects.length
+          projects: userProjectsToUse,
+          projectCount: userProjectsToUse.length
         })
       }
 
-      // Add team members
-      if (projectMembersData) {
-        projectMembersData.forEach((item: any) => {
+      // Add team members from project_members
+      if (projectMembersData && projectMembersData.length > 0) {
+        projectMembersData.forEach((item) => {
           const profile = item.profiles
-          const project = item.projects
+          const projectId = item.project_id
+          const project = userProjectsToUse.find(p => p.id === projectId)
 
-          if (!memberMap.has(profile.id)) {
-            memberMap.set(profile.id, {
-              ...profile,
-              role: profile.invitation_status === 'pending' ? 'invited' : 'member',
-              projects: [],
-              projectCount: 0
-            })
-          }
+          if (profile && project) {
+            if (!memberMap.has(profile.id)) {
+              memberMap.set(profile.id, {
+                ...profile,
+                role: profile.invitation_status === 'pending' ? 'invited' : 'member',
+                projects: [],
+                projectCount: 0
+              })
+            }
 
-          const member = memberMap.get(profile.id)!
-          if (!member.projects.find(p => p.id === project.id)) {
-            member.projects.push(project)
-            member.projectCount = member.projects.length
+            const member = memberMap.get(profile.id)!
+            if (!member.projects.find(p => p.id === project.id)) {
+              member.projects.push(project)
+              member.projectCount = member.projects.length
+            }
           }
         })
       }
@@ -134,8 +208,8 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
               full_name: invitedUser.full_name,
               created_at: invitedUser.created_at,
               role: 'invited',
-              projects: userProjects,
-              projectCount: userProjects.length,
+              projects: userProjectsToUse,
+              projectCount: userProjectsToUse.length,
               invitation_status: invitedUser.invitation_status,
               invited_by: invitedUser.invited_by
             })
@@ -143,7 +217,9 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
         })
       }
 
-      setTeamMembers(Array.from(memberMap.values()))
+      const finalMembers = Array.from(memberMap.values())
+      console.log('Final team members:', finalMembers)
+      setTeamMembers(finalMembers)
     } catch (error) {
       console.error('Error loading team members:', error)
       setTeamMembers([])
