@@ -150,32 +150,33 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
       }
 
       // Try to find existing user by email
-      let { data: user } = await supabase
+      const { data: user } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', email)
         .single()
 
-      // If user doesn't exist, create a profile entry for them
-      if (!user) {
-        const { data: newUser, error: createError } = await supabase
-          .from('profiles')
+      if (user) {
+        // User exists, add them to projects
+      } else {
+        // User doesn't exist, add them to invited_users table
+        const { error: inviteError } = await supabase
+          .from('invited_users')
           .insert({
-            id: crypto.randomUUID(), // Generate a temporary UUID
             email: email,
-            full_name: null,
-            created_at: new Date().toISOString()
+            invited_by: currentUserId
           })
-          .select()
-          .single()
 
-        if (createError) {
-          console.error('Error creating user profile:', createError)
-          alert('Error adding user')
+        if (inviteError) {
+          console.error('Error inviting user:', inviteError)
+          alert('Error inviting user. They may already be invited.')
           return
         }
 
-        user = newUser
+        alert(`Invitation sent to ${email}. They will be added to your projects when they sign up.`)
+        setAddUserEmail('')
+        await loadTeamMembers()
+        return
       }
 
       // Add user to all projects
