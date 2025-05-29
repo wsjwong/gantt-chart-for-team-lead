@@ -546,7 +546,7 @@ export default function DashboardPage() {
         {projects.length > 0 ? (
           <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="p-4 border-b border-border">
-              <h3 className="text-lg font-semibold">Interactive Project Timeline</h3>
+              <h3 className="text-lg font-semibold">Timeline</h3>
               <p className="text-sm text-muted-foreground">Click on any project row to view details and manage tasks</p>
             </div>
             
