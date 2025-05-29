@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Calendar, Users, Shield, BarChart3, CheckCircle, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { Calendar, Users, Shield, CheckCircle, ArrowRight } from "lucide-react";
 
 export default function Home() {
   return (
@@ -8,7 +9,13 @@ export default function Home() {
       <header className="border-b border-border">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <BarChart3 className="h-8 w-8 text-primary" />
+            <Image 
+              src="/logo.png" 
+              alt="Gantt Chart for Team Leader" 
+              width={40} 
+              height={40} 
+              className="rounded-lg"
+            />
             <h1 className="text-xl font-bold">Gantt Chart for Team Leader</h1>
           </div>
           <nav className="hidden md:flex space-x-6">
