@@ -811,12 +811,12 @@ export default function DashboardPage() {
                             <div 
                               className={`h-full rounded flex items-center justify-center ${
                                 isOverCapacity 
-                                  ? 'bg-red-500 hover:bg-red-600' 
+                                  ? 'bg-red-200 hover:bg-red-300' 
                                   : capacity > 80 
-                                  ? 'bg-yellow-500 hover:bg-yellow-600'
+                                  ? 'bg-pink-200 hover:bg-pink-300'
                                   : capacity > 0
-                                  ? 'bg-green-500 hover:bg-green-600'
-                                  : 'bg-gray-200'
+                                  ? 'bg-green-200 hover:bg-green-300'
+                                  : 'bg-gray-100'
                               } transition-colors`}
                               style={{ width: `${Math.min(100, capacity)}%` }}
                               title={`${group.person ? (group.person.full_name || group.person.email) : 'Unassigned'}: ${Math.round(capacity)}% capacity`}
@@ -891,15 +891,15 @@ export default function DashboardPage() {
                   <span>Project Timeline</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-green-500 rounded"></div>
+                  <div className="w-4 h-4 bg-green-200 rounded"></div>
                   <span>Normal Capacity (≤80%)</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+                  <div className="w-4 h-4 bg-pink-200 rounded"></div>
                   <span>High Capacity (80-100%)</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-red-500 rounded"></div>
+                  <div className="w-4 h-4 bg-red-200 rounded"></div>
                   <span>Over Capacity (&gt;100%)</span>
                 </div>
               </div>
