@@ -153,8 +153,8 @@ export default function AuthPage() {
                   <strong>Role Assignment:</strong> Your role will be determined automatically:
                 </p>
                 <ul className="text-xs text-muted-foreground mt-2 space-y-1">
-                  <li>• <strong>Project Admin:</strong> When you create a project</li>
-                  <li>• <strong>Team Member:</strong> When you're added to a project</li>
+                  <li>• <strong>Team Leader:</strong> When you create a team</li>
+                  <li>• <strong>Team Member:</strong> When you're added to a team</li>
                 </ul>
               </div>
             )}
