@@ -7,7 +7,7 @@ A modern SaaS application for project management with Gantt chart functionality,
 ### 🎯 Core Functionality
 - **Dark Theme UI** - Modern, professional dark interface
 - **Direct Project Management** - Each team leader manages their own projects directly
-- **Team Member Management** - Add/remove team members to/from projects with dedicated team management page
+- **Team Member Management** - Add/remove team members to/from projects with Google-style team management modal
 - **Task Assignment** - Create tasks and assign them to specific team members
 - **Project Timeline Tracking** - Visual project timelines with start and end dates
 - **Task Progress Tracking** - Individual task progress with status tracking (pending, in progress, completed, blocked)
@@ -164,13 +164,13 @@ src/
 │   ├── auth/           # Authentication pages
 │   ├── dashboard/      # Main dashboard with project Gantt chart
 │   ├── project/[id]/   # Individual project pages with task management
-│   ├── team/           # Team member management page
 │   ├── globals.css     # Global styles and theme
 │   ├── layout.tsx      # Root layout
 │   └── page.tsx        # Landing page
-├── lib/
-│   └── supabase.ts     # Supabase client and types
-└── components/         # Reusable components (future)
+├── components/
+│   └── TeamManagementModal.tsx  # Google-style team management modal
+└── lib/
+    └── supabase.ts     # Supabase client and types
 ```
 
 ### Available Scripts
