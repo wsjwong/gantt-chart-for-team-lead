@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus, Edit, Trash2, X } from 'lucide-react'
+import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus, Edit, Trash2, X, ChevronDown, ChevronUp } from 'lucide-react'
 import Image from 'next/image'
 import TeamManagementModal from '@/components/TeamManagementModal'
 
@@ -38,6 +38,7 @@ export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [showCreateProject, setShowCreateProject] = useState(false)
   const [showTeamModal, setShowTeamModal] = useState(false)
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
 
   
   // Project form state
@@ -674,6 +675,16 @@ export default function DashboardPage() {
     return Math.min(100, totalCapacity)
   }
 
+  const toggleGroupExpansion = (groupKey: string) => {
+    const newExpanded = new Set(expandedGroups)
+    if (newExpanded.has(groupKey)) {
+      newExpanded.delete(groupKey)
+    } else {
+      newExpanded.add(groupKey)
+    }
+    setExpandedGroups(newExpanded)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -765,8 +776,8 @@ export default function DashboardPage() {
         {projects.length > 0 ? (
           <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="p-4 border-b border-border">
-              <h3 className="text-lg font-semibold">Timeline</h3>
-              <p className="text-sm text-muted-foreground">Click on any project row to view details and manage tasks</p>
+              <h3 className="text-lg font-semibold">Team Capacity Overview</h3>
+              <p className="text-sm text-muted-foreground">Projects are collapsed by default to focus on team member capacity. Click on team member rows to expand and view individual projects.</p>
             </div>
             
             {/* Header Row */}
@@ -787,18 +798,30 @@ export default function DashboardPage() {
               {getProjectsByPerson().map((group) => (
                 <div key={group.key} className="border-b-2 border-border">
                   {/* Person Header Row */}
-                  <div className="grid grid-cols-[300px_repeat(12,80px)] gap-0 border-b border-border bg-muted/20">
+                  <div 
+                    className="grid grid-cols-[300px_repeat(12,80px)] gap-0 border-b border-border bg-muted/20 cursor-pointer hover:bg-muted/30 transition-colors"
+                    onClick={() => toggleGroupExpansion(group.key)}
+                  >
                     <div className="p-3 border-r border-border">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-sm font-semibold text-foreground">
-                            {group.person ? (group.person.full_name || group.person.email) : 'Unassigned'}
-                          </span>
-                          <div className="text-xs text-muted-foreground">
-                            {group.projects.length} project{group.projects.length !== 1 ? 's' : ''}
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1">
+                            {expandedGroups.has(group.key) ? (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold text-foreground">
+                              {group.person ? (group.person.full_name || group.person.email) : 'Unassigned'}
+                            </span>
+                            <div className="text-xs text-muted-foreground">
+                              {group.projects.length} project{group.projects.length !== 1 ? 's' : ''}
+                            </div>
                           </div>
                         </div>
-                        <Users className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
                     {weeks.slice(0, 12).map((week, weekIndex) => {
@@ -833,8 +856,8 @@ export default function DashboardPage() {
                     })}
                   </div>
                   
-                  {/* Projects under this person */}
-                  {group.projects.map((project) => (
+                  {/* Projects under this person - only show if expanded */}
+                  {expandedGroups.has(group.key) && group.projects.map((project) => (
                     <div 
                       key={project.id} 
                       className="grid grid-cols-[300px_repeat(12,80px)] gap-0 border-b border-border hover:bg-muted/30 cursor-pointer transition-colors"

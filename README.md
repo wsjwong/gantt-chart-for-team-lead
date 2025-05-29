@@ -4,6 +4,14 @@ A modern SaaS application for team capacity monitoring with Gantt chart function
 
 ## Recent Updates
 
+### Latest UI Update (v1.3.2)
+- **Updated Capacity Colors to Softer Tones** - Changed capacity indicator colors to be more muted and easier on the eyes
+- **Normal Capacity (≤80%)** - Changed from bright green to soft light green (green-200)
+- **High Capacity (80-100%)** - Changed from yellow to soft pink/rose (pink-200) 
+- **Over Capacity (>100%)** - Changed from bright red to soft light red (red-200)
+- **Updated Legend** - Legend colors now match the new softer palette for consistency
+- **Improved Visual Comfort** - Colors are now more subtle and professional while maintaining clear distinction
+
 ### Latest Bug Fix (v1.3.1)
 - **Fixed Team Member Assignment in Project Modals** - Resolved critical issue where team members were not appearing in the assignment dropdown when creating or editing projects
 - **Data Loading Sequence Fix** - Fixed the order of data loading to ensure team members are properly loaded before being displayed in project forms
