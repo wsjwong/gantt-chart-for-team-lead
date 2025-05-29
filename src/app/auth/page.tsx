@@ -147,17 +147,7 @@ export default function AuthPage() {
               </div>
             </div>
 
-            {!isLogin && (
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Role Assignment:</strong> Your role will be determined automatically:
-                </p>
-                <ul className="text-xs text-muted-foreground mt-2 space-y-1">
-                  <li>• <strong>Team Leader:</strong> When you create a team</li>
-                  <li>• <strong>Team Member:</strong> When you're added to a team</li>
-                </ul>
-              </div>
-            )}
+
 
             {message && (
               <div className={`p-3 rounded-lg text-sm ${
