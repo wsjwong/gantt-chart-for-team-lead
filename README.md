@@ -102,7 +102,7 @@ The application uses a comprehensive database schema for project and task manage
 ### `projects`
 - Project information with start and end dates
 - Owned by team leader users (admin_id)
-- Contains project name, description, timeline, and timestamps
+- Contains project name, timeline, and timestamps
 - Fields: `start_date`, `end_date` for project timeline
 
 ### `project_members`
