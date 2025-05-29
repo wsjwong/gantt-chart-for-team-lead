@@ -11,6 +11,7 @@ A modern SaaS application for project management with Gantt chart functionality,
 - **Direct Project Management** - Each team leader manages their own projects directly
 - **Team Member Management** - Add/remove team members to/from projects with consistent Google-style team management modal
 - **Project Assignment** - Assign team members to projects during creation and editing
+- **Invited User Support** - Invite users by email and assign them to projects before they accept the invitation
 - **Modal-based Editing** - Streamlined project editing through interactive modals instead of separate pages
 - **Interactive Gantt Chart** - Click on any project in the timeline to edit details and manage assignments
 - **Project Deletion** - Secure project deletion with admin-only access and confirmation dialogs
@@ -100,6 +101,8 @@ The application uses a comprehensive database schema for project and task manage
 - User profiles with role-based access
 - Links to Supabase auth.users
 - Stores user information (full_name, email)
+- Supports invitation system with `invitation_status` (pending/accepted)
+- Tracks who invited each user with `invited_by` field
 
 ### `projects`
 - Project information with start and end dates
@@ -131,7 +134,8 @@ The application uses a comprehensive database schema for project and task manage
 - Team leaders create projects with start and end dates
 - Comprehensive team member management with dedicated team page
 - Team members are added directly to projects with proper access control
-- Task creation and assignment to specific team members
+- **Invite users by email** and assign them to projects before they accept
+- Task creation and assignment to specific team members (including invited users)
 - Project-level and task-level progress tracking
 - **Secure project deletion** with admin validation and cascade cleanup
 
@@ -197,12 +201,24 @@ To set up the database schema, run the SQL commands from `supabase-schema.sql`:
 
 ```sql
 -- Run the commands in supabase-schema.sql to:
--- 1. Create profiles table with user information
+-- 1. Create profiles table with user information and invitation support
 -- 2. Create projects table with timeline fields
 -- 3. Create project_members junction table
 -- 4. Create tasks table with assignment and progress tracking
 -- 5. Set up Row Level Security (RLS) policies
 -- 6. Create proper foreign key relationships
+```
+
+### Invitation System Migration
+
+If you have an existing installation with the old `invited_users` table, run the migration script:
+
+```sql
+-- Run migrate_invited_users_to_profiles.sql to:
+-- 1. Add invitation_status and related fields to profiles table
+-- 2. Migrate existing invited users to profiles table
+-- 3. Update policies to support invited users
+-- 4. Enable project assignment to invited users
 ```
 
 ## Deployment
@@ -255,6 +271,8 @@ Perfect for team leaders who need comprehensive project visibility with the flex
 ## Future Enhancements
 
 ### Planned Features
+- [x] Invitation system for adding users by email
+- [x] Project assignment to invited users before acceptance
 - [ ] Enhanced visual Gantt chart with drag-and-drop
 - [ ] Project milestones
 - [ ] File attachments and comments
