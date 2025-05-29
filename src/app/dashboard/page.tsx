@@ -187,13 +187,8 @@ export default function DashboardPage() {
 
   const loadTeamMembers = async (userProfile: Profile) => {
     try {
-      if (projects.length === 0) {
-        setTeamMembers([userProfile as TeamMember])
-        return
-      }
-
-      // Get all unique team members from all projects
-      const { data, error } = await supabase
+      // Get all unique team members from all projects where user is admin
+      const { data: projectMembersData, error: membersError } = await supabase
         .from('project_members')
         .select(`
           profiles (
@@ -202,18 +197,38 @@ export default function DashboardPage() {
             email
           )
         `)
-        .in('project_id', projects.map(p => p.id))
+        .in('project_id', projects.filter(p => p.admin_id === userProfile.id).map(p => p.id))
 
-      if (error) {
-        console.error('Error loading team members:', error)
-        setTeamMembers([userProfile as TeamMember])
-        return
+      if (membersError) {
+        console.error('Error loading project members:', membersError)
       }
 
-      const members: TeamMember[] = data?.map((item: { profiles: TeamMember | TeamMember[] }) => {
+      const members: TeamMember[] = projectMembersData?.map((item: { profiles: TeamMember | TeamMember[] }) => {
         const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
         return profile
       }).filter(Boolean) || []
+      
+      // Get invited users for projects where user is admin (now from profiles table)
+      const { data: invitedUsers, error: invitedError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('invited_by', userProfile.id)
+        .eq('invitation_status', 'pending')
+
+      if (invitedError) {
+        console.error('Error loading invited users:', invitedError)
+      }
+
+      // Add invited users as team members (they can be assigned to projects)
+      if (invitedUsers) {
+        invitedUsers.forEach((invitedUser) => {
+          members.push({
+            id: invitedUser.id,
+            email: invitedUser.email,
+            full_name: `${invitedUser.email} (Invited)` // Mark as invited
+          })
+        })
+      }
       
       // Add current user if not already included
       if (!members.find((m: TeamMember) => m.id === userProfile.id)) {

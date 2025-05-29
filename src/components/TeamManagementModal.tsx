@@ -18,7 +18,8 @@ interface TeamMember {
   role: 'owner' | 'member' | 'invited'
   projects: Project[]
   projectCount: number
-  isInvited?: boolean
+  invitation_status?: 'pending' | 'accepted'
+  invited_by?: string
 }
 
 interface TeamManagementModalProps {
@@ -76,15 +77,16 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
           user_id,
           project_id,
           projects!inner(id, name, admin_id),
-          profiles!inner(id, email, full_name, created_at)
+          profiles!inner(id, email, full_name, created_at, invitation_status, invited_by)
         `)
         .eq('projects.admin_id', currentUserId)
 
-      // Get invited users
+      // Get invited users (now from profiles table)
       const { data: invitedUsers } = await supabase
-        .from('invited_users')
+        .from('profiles')
         .select('*')
         .eq('invited_by', currentUserId)
+        .eq('invitation_status', 'pending')
 
       // Group by user and collect their projects
       const memberMap = new Map<string, TeamMember>()
@@ -108,7 +110,7 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
           if (!memberMap.has(profile.id)) {
             memberMap.set(profile.id, {
               ...profile,
-              role: 'member',
+              role: profile.invitation_status === 'pending' ? 'invited' : 'member',
               projects: [],
               projectCount: 0
             })
@@ -125,16 +127,19 @@ export default function TeamManagementModal({ isOpen, onClose, currentUserId }: 
       // Add invited users as team members
       if (invitedUsers) {
         invitedUsers.forEach((invitedUser) => {
-          memberMap.set(invitedUser.id, {
-            id: invitedUser.id,
-            email: invitedUser.email,
-            full_name: null,
-            created_at: invitedUser.created_at,
-            role: 'invited',
-            projects: userProjects,
-            projectCount: userProjects.length,
-            isInvited: true
-          })
+          if (!memberMap.has(invitedUser.id)) {
+            memberMap.set(invitedUser.id, {
+              id: invitedUser.id,
+              email: invitedUser.email,
+              full_name: invitedUser.full_name,
+              created_at: invitedUser.created_at,
+              role: 'invited',
+              projects: userProjects,
+              projectCount: userProjects.length,
+              invitation_status: invitedUser.invitation_status,
+              invited_by: invitedUser.invited_by
+            })
+          }
         })
       }
 
