@@ -11,6 +11,7 @@ A modern SaaS application for project management with Gantt chart functionality,
 - **Project Assignment** - Assign team members to projects during creation and editing
 - **Modal-based Editing** - Streamlined project editing through interactive modals instead of separate pages
 - **Interactive Gantt Chart** - Click on any project in the timeline to edit details and manage assignments
+- **Project Deletion** - Secure project deletion with admin-only access and confirmation dialogs
 - **Project Timeline Tracking** - Visual project timelines with start and end dates
 - **Date-based Planning** - Use actual dates instead of week numbers for flexible day/week/month views
 
@@ -22,6 +23,7 @@ A modern SaaS application for project management with Gantt chart functionality,
 - Add/remove team members to/from projects via consistent modal interface
 - Create tasks and assign them to team members
 - Edit project details, timelines, and task assignments
+- **Delete projects** with proper validation and confirmation (admin-only)
 - View project Gantt chart with team member capacity
 - Access dedicated team management with unified styling
 
@@ -129,6 +131,7 @@ The application uses a comprehensive database schema for project and task manage
 - Team members are added directly to projects with proper access control
 - Task creation and assignment to specific team members
 - Project-level and task-level progress tracking
+- **Secure project deletion** with admin validation and cascade cleanup
 
 ### Task Management
 - Create tasks within projects with detailed information
@@ -142,6 +145,7 @@ The application uses a comprehensive database schema for project and task manage
 - Automatic progress calculation based on current date vs project timeline
 - Visual progress bars showing project completion percentage
 - Project editing with date validation and team member management
+- **Project deletion** with confirmation dialog and proper cleanup of associated data
 
 ### Team Member Capacity Tracking
 - Visual representation of team member workload

@@ -41,7 +41,6 @@ export interface Database {
         Row: {
           id: string
           name: string
-          description: string | null
           admin_id: string
           start_date: string
           end_date: string
@@ -51,7 +50,6 @@ export interface Database {
         Insert: {
           id?: string
           name: string
-          description?: string | null
           admin_id: string
           start_date: string
           end_date: string
@@ -61,7 +59,6 @@ export interface Database {
         Update: {
           id?: string
           name?: string
-          description?: string | null
           admin_id?: string
           start_date?: string
           end_date?: string

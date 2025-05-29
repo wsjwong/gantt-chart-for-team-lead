@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS profiles (
 CREATE TABLE IF NOT EXISTS projects (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL,
-    description TEXT,
     admin_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,

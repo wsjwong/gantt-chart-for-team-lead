@@ -15,7 +15,6 @@ interface Profile {
 interface Project {
   id: string
   name: string
-  description: string | null
   admin_id: string
   start_date: string
   end_date: string
@@ -41,7 +40,6 @@ export default function DashboardPage() {
   // Project form state
   const [projectForm, setProjectForm] = useState({
     name: '',
-    description: '',
     start_date: '',
     end_date: '',
     assigned_to: ''
@@ -253,7 +251,6 @@ export default function DashboardPage() {
     try {
       console.log('Creating project with data:', {
         name: projectForm.name,
-        description: projectForm.description,
         admin_id: profile.id,
         start_date: projectForm.start_date,
         end_date: projectForm.end_date,
@@ -263,7 +260,6 @@ export default function DashboardPage() {
         .from('projects')
         .insert({
           name: projectForm.name.trim(),
-          description: projectForm.description.trim() || null,
           admin_id: profile.id,
           start_date: projectForm.start_date,
           end_date: projectForm.end_date,
@@ -302,7 +298,6 @@ export default function DashboardPage() {
       setProjects([data, ...projects])
       setProjectForm({
         name: '',
-        description: '',
         start_date: '',
         end_date: '',
         assigned_to: ''
@@ -338,7 +333,6 @@ export default function DashboardPage() {
     
     setProjectForm({
       name: project.name,
-      description: project.description || '',
       start_date: project.start_date,
       end_date: project.end_date,
       assigned_to: memberData?.user_id || ''
@@ -368,7 +362,6 @@ export default function DashboardPage() {
         .from('projects')
         .update({
           name: projectForm.name.trim(),
-          description: projectForm.description.trim() || null,
           start_date: projectForm.start_date,
           end_date: projectForm.end_date,
         })
@@ -409,7 +402,6 @@ export default function DashboardPage() {
       setEditingProject(null)
       setProjectForm({
         name: '',
-        description: '',
         start_date: '',
         end_date: '',
         assigned_to: ''
@@ -471,7 +463,6 @@ export default function DashboardPage() {
       setEditingProject(null)
       setProjectForm({
         name: '',
-        description: '',
         start_date: '',
         end_date: '',
         assigned_to: ''
@@ -723,16 +714,7 @@ export default function DashboardPage() {
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Description</label>
-                <textarea
-                  value={projectForm.description}
-                  onChange={(e) => setProjectForm({...projectForm, description: e.target.value})}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
-                  placeholder="Enter project description"
-                  rows={3}
-                />
-              </div>
+
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Assign to Team Member</label>
@@ -812,16 +794,7 @@ export default function DashboardPage() {
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Description</label>
-                <textarea
-                  value={projectForm.description}
-                  onChange={(e) => setProjectForm({...projectForm, description: e.target.value})}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
-                  placeholder="Enter project description"
-                  rows={3}
-                />
-              </div>
+
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Assign to Team Member</label>
@@ -877,7 +850,6 @@ export default function DashboardPage() {
                     setEditingProject(null)
                     setProjectForm({
                       name: '',
-                      description: '',
                       start_date: '',
                       end_date: '',
                       assigned_to: ''
