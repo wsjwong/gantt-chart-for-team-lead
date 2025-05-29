@@ -4,7 +4,15 @@ A modern SaaS application for team capacity monitoring with Gantt chart function
 
 ## Recent Updates
 
-### Latest Fixes (v1.2.2)
+### Latest Fixes (v1.2.3)
+- **Fixed Database Error on User Signup** - Resolved critical issue where new user registration would fail due to duplicate email constraint violations
+- **Database Trigger Fix** - Updated `handle_new_user()` trigger function to properly handle existing users during signup
+- **RLS Policy Compatibility** - Removed manual profile creation from client code that conflicted with Row Level Security policies
+- **Automatic Profile Management** - Ensured database trigger handles all profile creation scenarios (new users and existing invited users)
+- **Signup Flow Optimization** - Streamlined user registration to rely entirely on secure database-level profile creation
+- **Constraint Handling** - Fixed unique email constraint violations by improving trigger logic for existing users
+
+### Previous Fixes (v1.2.2)
 - **Fixed Team Invitation RLS Issues** - Resolved "new row violates row-level security policy" error when inviting users
 - **Enhanced Invitation Logic** - Updated invitation system to properly handle re-invitations and pending users
 - **UUID Generation** - Added proper UUID generation for invited users to prevent database conflicts
@@ -212,27 +220,28 @@ This integration makes the Gantt Chart application more maintainable and allows 
 
 The project includes a comprehensive mock dataset (`mock_data_inserts.sql`) with:
 
-### Team Members (9 profiles)
-- Jeffrey Wong (jeffrey.wong@company.com)
-- Nerissa Chen (nerissa.chen@company.com)
-- Edmund Lee (edmund.lee@company.com)
-- Elaine Tam (elaine.tam@company.com)
-- Dorothy Liu (dorothy.liu@company.com)
-- Jonathan Ng (jonathan.ng@company.com)
-- Carson Chan (carson.chan@company.com)
-- Melo Kim (melo.kim@company.com)
-- Phoebe Zhao (phoebe.zhao@company.com)
+### Team Members (2 profiles)
+- Jeffrey (jeffrey@company.com)
+- Nerissa (nerissa@company.com)
 
-### Projects (28 projects)
-Includes realistic project names with calculated start/end dates:
-- **Troubleshooting** (Week 18-53, 2024)
-- **PWH LAS** (Week 7-16, 2024)
-- **QMH Pivka +RUO+A1c** (Week 20-22, 2024)
-- **UCH LAS** (Week 41-53, 2024)
-- **Mass spec training** (Week 22, 2024)
-- **KAM training** (Week 23, 2024)
-- **Evaluation revamp** (Week 23-31, 2024)
-- And 21 more projects covering various medical/lab workflows
+### Projects (12 projects)
+Includes realistic project names with calculated start/end dates based on 2024 calendar:
+
+**Jeffrey's Projects:**
+- **Troubleshooting** (May 6, 2024 - Dec 30, 2024) - Week 18-53
+- **PWH LAS** (Feb 12, 2024 - Apr 22, 2024) - Week 7-16
+- **QMH Pivka +RUO+A1c** (May 20, 2024 - Jun 3, 2024) - Week 20-22
+- **UCH LAS** (Oct 14, 2024 - Dec 30, 2024) - Week 41-53
+- **Mass spec training** (Jun 3, 2024) - Week 22
+- **KAM training** (Jun 10, 2024) - Week 23
+
+**Nerissa's Projects:**
+- **Troubleshooting** (May 6, 2024 - Dec 30, 2024) - Week 18-53
+- **PYNEH u601** (Apr 22, 2024 - Apr 29, 2024) - Week 16-17
+- **UCH PIvka** (May 27, 2024) - Week 21
+- **MGH LAS** (Jun 10, 2024 - Jul 8, 2024) - Week 23-27
+- **Mass spec training** (Jun 3, 2024) - Week 22
+- **Mass spec launch** (Jun 10, 2024 - Aug 5, 2024) - Week 23-31
 
 ### Project Assignments
 - Each team member is assigned to multiple projects
