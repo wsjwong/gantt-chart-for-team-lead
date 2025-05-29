@@ -1,10 +1,18 @@
 # Gantt Chart for Team Lead
 
-A modern SaaS application for project management with Gantt chart functionality, built with Next.js, Tailwind CSS, and Supabase. This tool is specifically designed for team leads to manage their projects with simple project-based timelines, replacing complex task management with streamlined project tracking.
+A modern SaaS application for team capacity monitoring with Gantt chart functionality, built with Next.js, Tailwind CSS, and Supabase. This tool is specifically designed for team leads to monitor their team capacity with simple project-based tracking, replacing complex task management with streamlined team capacity monitoring.
 
 ## Recent Updates
 
-### Latest Fixes (v1.2.1)
+### Latest Fixes (v1.2.2)
+- **Fixed Team Invitation RLS Issues** - Resolved "new row violates row-level security policy" error when inviting users
+- **Enhanced Invitation Logic** - Updated invitation system to properly handle re-invitations and pending users
+- **UUID Generation** - Added proper UUID generation for invited users to prevent database conflicts
+- **RLS Policy Updates** - Created comprehensive RLS policies to allow user invitations while maintaining security
+- **Improved Error Messages** - Better error handling with specific messages for different invitation scenarios
+- **Database Security** - Enhanced row-level security policies for profiles table to support invitation workflow
+
+### Previous Fixes (v1.2.1)
 - **Fixed Team Management Modal** - Resolved critical issue where team members were not loading in the manage team modal
 - **Enhanced Profile Creation** - Improved user profile creation with upsert functionality to handle race conditions and concurrent access
 - **Better Error Handling** - Added comprehensive error messages for profile access issues and RLS policy problems
@@ -25,7 +33,7 @@ A modern SaaS application for project management with Gantt chart functionality,
 - **Modal-based Editing** - Streamlined project editing through interactive modals instead of separate pages
 - **Interactive Gantt Chart** - Click on any project in the timeline to edit details and manage assignments
 - **Project Deletion** - Secure project deletion with admin-only access and confirmation dialogs
-- **Project Timeline Tracking** - Visual project timelines with start and end dates
+- **Team Capacity Tracking** - Visual team capacity monitoring with project timelines and start/end dates
 - **Date-based Planning** - Use actual dates instead of week numbers for flexible day/week/month views
 
 ### 👥 User Roles
@@ -156,7 +164,7 @@ The application uses a comprehensive database schema for project and task manage
 - Task timeline management with start and end dates
 - Visual task progress indicators
 
-### Project Timeline Management
+### Team Capacity Management
 - Project cards with start/end dates, duration, and team member count
 - Automatic progress calculation based on current date vs project timeline
 - Visual progress bars showing project completion percentage

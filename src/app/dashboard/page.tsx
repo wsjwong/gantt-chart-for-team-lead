@@ -625,7 +625,7 @@ export default function DashboardPage() {
         {/* Projects Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Project Timeline</h2>
+            <h2 className="text-2xl font-bold text-foreground">Team Capacity</h2>
           </div>
           <div className="flex items-center space-x-3">
             <button
