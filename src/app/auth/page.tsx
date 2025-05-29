@@ -11,7 +11,6 @@ export default function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
-  const [role, setRole] = useState<'admin' | 'team_member'>('team_member')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
@@ -44,23 +43,23 @@ export default function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              full_name: fullName,
+            }
+          }
         })
+        
         if (error) throw error
 
         if (data.user) {
-          // Create profile
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              email,
-              full_name: fullName,
-              role,
-            })
-          
-          if (profileError) throw profileError
-          
-          setMessage('Account created successfully! Please check your email to verify your account.')
+          if (data.user.email_confirmed_at) {
+            // User is confirmed, redirect to dashboard
+            router.push('/dashboard')
+          } else {
+            // User needs to confirm email
+            setMessage('Account created successfully! Please check your email to verify your account before signing in.')
+          }
         }
       }
     } catch (error) {
@@ -149,22 +148,14 @@ export default function AuthPage() {
             </div>
 
             {!isLogin && (
-              <div>
-                <label htmlFor="role" className="block text-sm font-medium text-foreground mb-2">
-                  Role
-                </label>
-                <select
-                  id="role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as 'admin' | 'team_member')}
-                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
-                >
-                  <option value="team_member">Team Member</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Admins can create projects and manage all tasks. Team members can only view and update their assigned tasks.
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Role Assignment:</strong> Your role will be determined automatically:
                 </p>
+                <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                  <li>• <strong>Project Admin:</strong> When you create a project</li>
+                  <li>• <strong>Team Member:</strong> When you're added to a project</li>
+                </ul>
               </div>
             )}
 
@@ -193,7 +184,7 @@ export default function AuthPage() {
               className="text-primary hover:text-primary/80 text-sm"
             >
               {isLogin 
-                ? "Don't have an account? Sign up" 
+                ? "Don&apos;t have an account? Sign up" 
                 : "Already have an account? Sign in"
               }
             </button>

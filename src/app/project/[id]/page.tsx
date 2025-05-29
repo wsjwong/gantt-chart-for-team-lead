@@ -10,7 +10,6 @@ interface Profile {
   id: string
   email: string
   full_name: string | null
-  role: 'admin' | 'team_member'
 }
 
 interface Project {
@@ -104,8 +103,11 @@ export default function ProjectPage() {
         return
       }
 
-      // Check if user has access to this project
-      if (profileData.role === 'team_member') {
+      // Check if user has access to this project (admin or member)
+      const isAdmin = projectData.admin_id === user.id
+      let isMember = false
+      
+      if (!isAdmin) {
         const { data: memberData } = await supabase
           .from('project_members')
           .select('*')
@@ -113,11 +115,10 @@ export default function ProjectPage() {
           .eq('user_id', user.id)
           .single()
 
-        if (!memberData) {
-          router.push('/dashboard')
-          return
-        }
-      } else if (projectData.admin_id !== user.id) {
+        isMember = !!memberData
+      }
+      
+      if (!isAdmin && !isMember) {
         router.push('/dashboard')
         return
       }
@@ -232,10 +233,12 @@ export default function ProjectPage() {
   }
 
   const updateTaskProgress = async (taskId: string, progress: number, status: string) => {
-    if (profile?.role === 'team_member') {
-      // Check if task is assigned to current user
+    const isProjectAdmin = project?.admin_id === profile?.id
+    
+    if (!isProjectAdmin) {
+      // Non-admins can only update their own tasks
       const task = tasks.find(t => t.id === taskId)
-      if (task?.assigned_to !== profile.id) {
+      if (task?.assigned_to !== profile?.id) {
         alert('You can only update your own tasks')
         return
       }
@@ -270,6 +273,10 @@ export default function ProjectPage() {
     }
   }
 
+  const isProjectAdmin = () => {
+    return project?.admin_id === profile?.id
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -296,14 +303,23 @@ export default function ProjectPage() {
                 Back to Dashboard
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">{project?.name}</h1>
+                <div className="flex items-center space-x-2">
+                  <h1 className="text-2xl font-bold text-foreground">{project?.name}</h1>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    isProjectAdmin()
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-secondary/10 text-secondary-foreground'
+                  }`}>
+                    {isProjectAdmin() ? 'Admin' : 'Member'}
+                  </span>
+                </div>
                 {project?.description && (
                   <p className="text-muted-foreground">{project.description}</p>
                 )}
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              {profile?.role === 'admin' && (
+              {isProjectAdmin() && (
                 <>
                   <button
                     onClick={() => setShowAddMember(true)}
@@ -348,12 +364,12 @@ export default function ProjectPage() {
               <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h4 className="text-xl font-semibold text-foreground mb-2">No Tasks Yet</h4>
               <p className="text-muted-foreground mb-6">
-                {profile?.role === 'admin' 
+                {isProjectAdmin()
                   ? 'Create your first task to start planning your project' 
                   : 'No tasks have been assigned yet'
                 }
               </p>
-              {profile?.role === 'admin' && (
+              {isProjectAdmin() && (
                 <button
                   onClick={() => setShowCreateTask(true)}
                   className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
@@ -411,7 +427,7 @@ export default function ProjectPage() {
                   </div>
 
                   {/* Update Progress (only for assigned tasks or admins) */}
-                  {(profile?.role === 'admin' || task.assigned_to === profile?.id) && (
+                  {(isProjectAdmin() || task.assigned_to === profile?.id) && (
                     <div className="flex items-center space-x-4">
                       <select
                         value={task.status}
