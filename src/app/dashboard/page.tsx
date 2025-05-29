@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus, Edit, Trash2 } from 'lucide-react'
+import { LogOut, Users, Calendar, ChevronLeft, ChevronRight, FolderPlus, Edit, Trash2, X } from 'lucide-react'
 import TeamManagementModal from '@/components/TeamManagementModal'
 
 interface Profile {
@@ -699,8 +699,18 @@ export default function DashboardPage() {
       {/* Create Project Modal */}
       {showCreateProject && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card p-6 rounded-lg border border-border max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">Create New Project</h3>
+          <div className="bg-card rounded-lg border border-border max-w-md w-full mx-4">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h3 className="text-xl font-bold">Create New Project</h3>
+              <button
+                onClick={() => setShowCreateProject(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6">
             <form onSubmit={createProject} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Project Name</label>
@@ -772,6 +782,7 @@ export default function DashboardPage() {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
@@ -779,8 +790,27 @@ export default function DashboardPage() {
       {/* Edit Project Modal */}
       {showEditProject && editingProject && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card p-6 rounded-lg border border-border max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">Edit Project</h3>
+          <div className="bg-card rounded-lg border border-border max-w-md w-full mx-4">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h3 className="text-xl font-bold">Edit Project</h3>
+              <button
+                onClick={() => {
+                  setShowEditProject(false)
+                  setEditingProject(null)
+                  setProjectForm({
+                    name: '',
+                    start_date: '',
+                    end_date: '',
+                    assigned_to: ''
+                  })
+                }}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6">
             <form onSubmit={updateProject} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Project Name</label>
@@ -881,6 +911,7 @@ export default function DashboardPage() {
                 </div>
               )}
             </form>
+            </div>
           </div>
         </div>
       )}
