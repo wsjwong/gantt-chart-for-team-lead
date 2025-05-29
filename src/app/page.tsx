@@ -18,7 +18,7 @@ export default function Home() {
             />
             <h1 className="text-xl font-bold">Gantt Chart for Team Leader</h1>
           </div>
-          <nav className="hidden md:flex space-x-6">
+          <nav className="hidden md:flex items-center space-x-6">
             <Link href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
               Features
             </Link>
@@ -88,6 +88,84 @@ export default function Home() {
                 Admins have full control while team members can only access their assigned tasks. 
                 Secure and organized.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 px-4 bg-card">
+        <div className="container mx-auto">
+          <h3 className="text-3xl font-bold text-center mb-12">Simple, Transparent Pricing</h3>
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="bg-background p-8 rounded-lg border border-border text-center">
+              <h4 className="text-xl font-semibold mb-4">Starter</h4>
+              <div className="text-3xl font-bold mb-2">$9<span className="text-lg text-muted-foreground">/month</span></div>
+              <p className="text-muted-foreground mb-6">Perfect for small teams</p>
+              <ul className="space-y-3 mb-8 text-left">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Up to 5 team members
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  3 active projects
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Basic Gantt charts
+                </li>
+              </ul>
+              <Link href="/auth" className="w-full bg-secondary text-secondary-foreground px-6 py-3 rounded-lg hover:bg-secondary/90 transition-colors inline-block">
+                Get Started
+              </Link>
+            </div>
+            <div className="bg-background p-8 rounded-lg border-2 border-primary text-center relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                Most Popular
+              </div>
+              <h4 className="text-xl font-semibold mb-4">Professional</h4>
+              <div className="text-3xl font-bold mb-2">$19<span className="text-lg text-muted-foreground">/month</span></div>
+              <p className="text-muted-foreground mb-6">For growing teams</p>
+              <ul className="space-y-3 mb-8 text-left">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Up to 15 team members
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Unlimited projects
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Advanced features
+                </li>
+              </ul>
+              <Link href="/auth" className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors inline-block">
+                Get Started
+              </Link>
+            </div>
+            <div className="bg-background p-8 rounded-lg border border-border text-center">
+              <h4 className="text-xl font-semibold mb-4">Enterprise</h4>
+              <div className="text-3xl font-bold mb-2">$39<span className="text-lg text-muted-foreground">/month</span></div>
+              <p className="text-muted-foreground mb-6">For large organizations</p>
+              <ul className="space-y-3 mb-8 text-left">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Unlimited everything
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Custom integrations
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  Priority support
+                </li>
+              </ul>
+              <Link href="/auth" className="w-full bg-secondary text-secondary-foreground px-6 py-3 rounded-lg hover:bg-secondary/90 transition-colors inline-block">
+                Contact Sales
+              </Link>
             </div>
           </div>
         </div>
