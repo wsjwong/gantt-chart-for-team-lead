@@ -4,7 +4,15 @@ A modern SaaS application for team capacity monitoring with Gantt chart function
 
 ## Recent Updates
 
-### Latest UI Update (v1.3.2)
+### Latest Feature Update (v1.4.0)
+- **Collapsed Projects by Default** - Projects are now collapsed by default to focus on team member capacity overview
+- **Enhanced Team Lead Oversight** - Dashboard prioritizes capacity visualization over individual project details
+- **Click-to-Expand Functionality** - Team member rows can be clicked to expand and view individual projects
+- **Improved Capacity Focus** - Main view shows team member workload with expandable project details
+- **Visual Hierarchy Enhancement** - Clear distinction between team member capacity and individual project timelines
+- **Better Team Management** - Streamlined interface for monitoring team capacity at a glance
+
+### Previous UI Update (v1.3.2)
 - **Updated Capacity Colors to Softer Tones** - Changed capacity indicator colors to be more muted and easier on the eyes
 - **Normal Capacity (≤80%)** - Changed from bright green to soft light green (green-200)
 - **High Capacity (80-100%)** - Changed from yellow to soft pink/rose (pink-200) 
