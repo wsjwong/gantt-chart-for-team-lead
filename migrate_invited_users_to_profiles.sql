@@ -60,8 +60,8 @@ CREATE POLICY "Project admins can manage project members" ON project_members FOR
 CREATE INDEX IF NOT EXISTS idx_profiles_invitation_status ON profiles(invitation_status);
 CREATE INDEX IF NOT EXISTS idx_profiles_invited_by ON profiles(invited_by);
 
--- Step 7: Drop the invited_users table (commented out for safety - uncomment when ready)
--- DROP TABLE IF EXISTS invited_users;
+-- Step 7: Drop the invited_users table
+DROP TABLE IF EXISTS invited_users;
 
 -- Step 8: Update the handle_new_user function to set invitation status to accepted for new signups
 CREATE OR REPLACE FUNCTION public.handle_new_user()
