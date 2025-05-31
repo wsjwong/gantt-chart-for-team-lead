@@ -608,15 +608,24 @@ export default function DashboardPage() {
       return null
     }
 
-    // Calculate overlap percentage
+    // Calculate overlap percentage for visual display
     const overlapStart = new Date(Math.max(projectStart.getTime(), weekStart.getTime()))
     const overlapEnd = new Date(Math.min(projectEnd.getTime(), weekEnd.getTime()))
     const overlapDays = (overlapEnd.getTime() - overlapStart.getTime()) / (24 * 60 * 60 * 1000) + 1
     const weekDays = 7
     const percentage = Math.min(100, (overlapDays / weekDays) * 100)
 
+    // Calculate hours for this week
+    let hoursThisWeek = 0
+    if (project.total_hours && overlapDays > 0) {
+      const projectDurationDays = Math.floor((projectEnd.getTime() - projectStart.getTime()) / (24 * 60 * 60 * 1000)) + 1
+      const hoursPerDay = project.total_hours / projectDurationDays
+      hoursThisWeek = hoursPerDay * overlapDays
+    }
+
     return {
       percentage,
+      hours: hoursThisWeek,
       isStart: projectStart >= weekStart && projectStart <= weekEnd,
       isEnd: projectEnd >= weekStart && projectEnd <= weekEnd,
       project
@@ -672,7 +681,7 @@ export default function DashboardPage() {
       .map(([key, group]) => ({ key, ...group }))
   }
 
-  // Calculate person's capacity for a specific week (8 hours per day = 100%)
+  // Calculate person's capacity for a specific week in hours
   const getPersonCapacity = (personProjects: Project[], weekIndex: number) => {
     let totalHours = 0
     const weekStart = weeks[weekIndex]
@@ -705,9 +714,7 @@ export default function DashboardPage() {
       }
     })
     
-    // Convert to percentage (8 hours = 100%)
-    const maxHoursPerWeek = 8 * 7 // 8 hours per day * 7 days
-    return (totalHours / maxHoursPerWeek) * 100
+    return totalHours
   }
 
   const toggleGroupExpansion = (groupKey: string) => {
@@ -859,8 +866,10 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     {weeks.slice(0, 12).map((week, weekIndex) => {
-                      const capacity = getPersonCapacity(group.projects, weekIndex)
-                      const isOverCapacity = capacity > 100
+                      const hoursCapacity = getPersonCapacity(group.projects, weekIndex)
+                      const maxHoursPerWeek = 56 // 8 hours per day * 7 days
+                      const capacityPercentage = (hoursCapacity / maxHoursPerWeek) * 100
+                      const isOverCapacity = hoursCapacity > maxHoursPerWeek
                       
                       return (
                         <div key={weekIndex} className="p-1 border-r border-border">
@@ -869,18 +878,18 @@ export default function DashboardPage() {
                               className={`h-full rounded flex items-center justify-center ${
                                 isOverCapacity 
                                   ? 'bg-red-200 hover:bg-red-300' 
-                                  : capacity > 80 
+                                  : hoursCapacity > 45 
                                   ? 'bg-pink-200 hover:bg-pink-300'
-                                  : capacity > 0
+                                  : hoursCapacity > 0
                                   ? 'bg-green-200 hover:bg-green-300'
                                   : 'bg-gray-100'
                               } transition-colors`}
-                              style={{ width: `${Math.min(100, capacity)}%` }}
-                              title={`${group.person ? (group.person.full_name || group.person.email) : 'Unassigned'}: ${Math.round(capacity)}% capacity (${Math.round((capacity / 100) * 56)} hours/week, max 56 hours)`}
+                              style={{ width: `${Math.min(100, capacityPercentage)}%` }}
+                              title={`${group.person ? (group.person.full_name || group.person.email) : 'Unassigned'}: ${Math.round(hoursCapacity * 10) / 10}h/week (max ${maxHoursPerWeek}h)`}
                             >
-                              {capacity > 30 && (
+                              {hoursCapacity > 5 && (
                                 <span className="text-xs text-white font-medium">
-                                  {Math.round(capacity)}%
+                                  {Math.round(hoursCapacity * 10) / 10}h
                                 </span>
                               )}
                             </div>
@@ -921,11 +930,11 @@ export default function DashboardPage() {
                                 <div 
                                   className="h-full rounded bg-blue-500 flex items-center justify-center hover:bg-blue-600 transition-colors"
                                   style={{ width: `${position.percentage}%` }}
-                                  title={`${project.name}: ${Math.round(position.percentage)}% of week - Click to manage`}
+                                  title={`${project.name}: ${Math.round(position.hours * 10) / 10}h this week - Click to manage`}
                                 >
-                                  {position.percentage > 50 && (
+                                  {position.hours > 2 && (
                                     <span className="text-xs text-white font-medium">
-                                      {Math.round(position.percentage)}%
+                                      {Math.round(position.hours * 10) / 10}h
                                     </span>
                                   )}
                                 </div>

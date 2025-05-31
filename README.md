@@ -4,7 +4,16 @@ A modern SaaS application for team capacity monitoring with Gantt chart function
 
 ## Recent Updates
 
-### Latest Feature Update (v1.5.0)
+### Latest Feature Update (v1.6.0)
+- **Hours Display Instead of Percentages** - Project timelines now show actual hours per week instead of percentages for clearer capacity planning
+- **Team Member Hours Tracking** - Team member capacity bars display hours per week (e.g., "32.5h/week") instead of percentage values
+- **Project Hours Per Week** - Individual projects show hours allocated for each week (e.g., "8.5h this week") in the timeline
+- **Enhanced Tooltips** - All tooltips now display hours-based information for better resource understanding
+- **Improved Visual Clarity** - Hours-based display makes it easier to understand actual workload and capacity allocation
+- **Consistent Hours Format** - All displays use decimal hours (e.g., 8.5h) for precise capacity tracking
+- **Better Resource Planning** - Team leads can now see exact hours allocated per person per week for more accurate planning
+
+### Previous Feature Update (v1.5.0)
 - **8-Hour Daily Capacity System** - Each team member now has a standardized 8-hour daily capacity (56 hours/week)
 - **Hours-Based Project Planning** - Projects can specify total hours which are distributed evenly across the project period
 - **Capacity Tracking with Hours** - Tooltips show both percentage and actual hours (e.g., "85% capacity (48 hours/week, max 56 hours)")
