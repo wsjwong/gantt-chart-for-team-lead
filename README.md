@@ -255,23 +255,23 @@ The project includes a comprehensive mock dataset (`mock_data_inserts.sql`) with
 - Nerissa (nerissa@company.com)
 
 ### Projects (12 projects)
-Includes realistic project names with calculated start/end dates based on 2024 calendar:
+Includes realistic project names with calculated start/end dates based on 2025 calendar:
 
 **Jeffrey's Projects:**
-- **Troubleshooting** (May 6, 2024 - Dec 30, 2024) - Week 18-53
-- **PWH LAS** (Feb 12, 2024 - Apr 22, 2024) - Week 7-16
-- **QMH Pivka +RUO+A1c** (May 20, 2024 - Jun 3, 2024) - Week 20-22
-- **UCH LAS** (Oct 14, 2024 - Dec 30, 2024) - Week 41-53
-- **Mass spec training** (Jun 3, 2024) - Week 22
-- **KAM training** (Jun 10, 2024) - Week 23
+- **Troubleshooting** (May 6, 2025 - Dec 30, 2025) - Week 18-53
+- **PWH LAS** (Feb 12, 2025 - Apr 22, 2025) - Week 7-16
+- **QMH Pivka +RUO+A1c** (May 20, 2025 - Jun 3, 2025) - Week 20-22
+- **UCH LAS** (Oct 14, 2025 - Dec 30, 2025) - Week 41-53
+- **Mass spec training** (Jun 3, 2025) - Week 22
+- **KAM training** (Jun 10, 2025) - Week 23
 
 **Nerissa's Projects:**
-- **Troubleshooting** (May 6, 2024 - Dec 30, 2024) - Week 18-53
-- **PYNEH u601** (Apr 22, 2024 - Apr 29, 2024) - Week 16-17
-- **UCH PIvka** (May 27, 2024) - Week 21
-- **MGH LAS** (Jun 10, 2024 - Jul 8, 2024) - Week 23-27
-- **Mass spec training** (Jun 3, 2024) - Week 22
-- **Mass spec launch** (Jun 10, 2024 - Aug 5, 2024) - Week 23-31
+- **Troubleshooting** (May 6, 2025 - Dec 30, 2025) - Week 18-53
+- **PYNEH u601** (Apr 22, 2025 - Apr 29, 2025) - Week 16-17
+- **UCH PIvka** (May 27, 2025) - Week 21
+- **MGH LAS** (Jun 10, 2025 - Jul 8, 2025) - Week 23-27
+- **Mass spec training** (Jun 3, 2025) - Week 22
+- **Mass spec launch** (Jun 10, 2025 - Aug 5, 2025) - Week 23-31
 
 ### Project Assignments
 - Each team member is assigned to multiple projects

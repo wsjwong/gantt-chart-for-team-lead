@@ -22,6 +22,7 @@ interface Project {
   created_at: string
   assigned_user_id?: string
   assigned_user_name?: string
+  total_hours?: number
 }
 
 interface TeamMember {
@@ -46,7 +47,8 @@ export default function DashboardPage() {
     name: '',
     start_date: '',
     end_date: '',
-    assigned_to: ''
+    assigned_to: '',
+    total_hours: ''
   })
 
   // Edit project state
@@ -71,11 +73,7 @@ export default function DashboardPage() {
 
   const weeks = generateWeeks(currentDate)
 
-  const getWeekNumber = (date: Date) => {
-    const start = new Date(date.getFullYear(), 0, 1)
-    const diff = date.getTime() - start.getTime()
-    return Math.ceil(diff / (7 * 24 * 60 * 60 * 1000))
-  }
+
 
   useEffect(() => {
     const getUser = async () => {
@@ -370,6 +368,7 @@ export default function DashboardPage() {
           admin_id: profile.id,
           start_date: projectForm.start_date,
           end_date: projectForm.end_date,
+          total_hours: projectForm.total_hours ? parseFloat(projectForm.total_hours) : null,
         })
         .select()
         .single()
@@ -407,7 +406,8 @@ export default function DashboardPage() {
         name: '',
         start_date: '',
         end_date: '',
-        assigned_to: ''
+        assigned_to: '',
+        total_hours: ''
       })
       setShowCreateProject(false)
     } catch (err) {
@@ -442,7 +442,8 @@ export default function DashboardPage() {
       name: project.name,
       start_date: project.start_date,
       end_date: project.end_date,
-      assigned_to: memberData?.user_id || ''
+      assigned_to: memberData?.user_id || '',
+      total_hours: project.total_hours?.toString() || ''
     })
     setShowEditProject(true)
   }
@@ -471,6 +472,7 @@ export default function DashboardPage() {
           name: projectForm.name.trim(),
           start_date: projectForm.start_date,
           end_date: projectForm.end_date,
+          total_hours: projectForm.total_hours ? parseFloat(projectForm.total_hours) : null,
         })
         .eq('id', editingProject.id)
         .select()
@@ -511,7 +513,8 @@ export default function DashboardPage() {
         name: '',
         start_date: '',
         end_date: '',
-        assigned_to: ''
+        assigned_to: '',
+        total_hours: ''
       })
     } catch (err) {
       console.error('Unexpected error updating project:', err)
@@ -572,7 +575,8 @@ export default function DashboardPage() {
         name: '',
         start_date: '',
         end_date: '',
-        assigned_to: ''
+        assigned_to: '',
+        total_hours: ''
       })
 
       alert('Project deleted successfully')
@@ -612,7 +616,7 @@ export default function DashboardPage() {
   const formatWeekHeader = (date: Date) => {
     const month = date.toLocaleDateString('en-US', { month: 'short' })
     const day = date.getDate()
-    return `${month}-${String(day).padStart(2, '0')}`
+    return `${month} ${String(day).padStart(2, '0')}`
   }
 
   const calculateProjectDuration = (project: Project) => {
@@ -788,7 +792,6 @@ export default function DashboardPage() {
               {weeks.slice(0, 12).map((week, index) => (
                 <div key={index} className="p-2 text-center border-r border-border">
                   <div className="text-xs font-medium">{formatWeekHeader(week)}</div>
-                  <div className="text-xs text-muted-foreground">W{getWeekNumber(week)}</div>
                 </div>
               ))}
             </div>
@@ -1017,6 +1020,20 @@ export default function DashboardPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Total Hours</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={projectForm.total_hours}
+                  onChange={(e) => setProjectForm({...projectForm, total_hours: e.target.value})}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                  placeholder="Enter total hours for this project"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Hours will be distributed evenly across the project period</p>
+              </div>
+
               <div className="flex space-x-3">
                 <button
                   type="submit"
@@ -1053,7 +1070,8 @@ export default function DashboardPage() {
                     name: '',
                     start_date: '',
                     end_date: '',
-                    assigned_to: ''
+                    assigned_to: '',
+                    total_hours: ''
                   })
                 }}
                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -1117,6 +1135,20 @@ export default function DashboardPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Total Hours</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={projectForm.total_hours}
+                  onChange={(e) => setProjectForm({...projectForm, total_hours: e.target.value})}
+                  className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                  placeholder="Enter total hours for this project"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Hours will be distributed evenly across the project period</p>
+              </div>
+
               <div className="flex space-x-3">
                 <button
                   type="submit"
@@ -1133,7 +1165,8 @@ export default function DashboardPage() {
                       name: '',
                       start_date: '',
                       end_date: '',
-                      assigned_to: ''
+                      assigned_to: '',
+                      total_hours: ''
                     })
                   }}
                   className="flex-1 border border-border text-foreground py-2 px-4 rounded-lg font-semibold hover:bg-accent transition-colors"
