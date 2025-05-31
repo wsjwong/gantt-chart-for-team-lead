@@ -266,50 +266,21 @@ This integration makes the Gantt Chart application more maintainable and allows 
 
 ## Mock Data
 
-The project includes a comprehensive mock dataset (`mock_data_inserts.sql`) with:
+The project includes optional mock data for testing and demonstration purposes. After setting up the database schema, you can optionally load sample data to explore the application features.
 
-### Team Members (2 profiles)
-- Jeffrey (jeffrey@company.com)
-- Nerissa (nerissa@company.com)
-
-### Projects (12 projects)
-Includes realistic project names with calculated start/end dates based on 2025 calendar:
-
-**Jeffrey's Projects:**
-- **Troubleshooting** (May 6, 2025 - Dec 30, 2025) - Week 18-53
-- **PWH LAS** (Feb 12, 2025 - Apr 22, 2025) - Week 7-16
-- **QMH Pivka +RUO+A1c** (May 20, 2025 - Jun 3, 2025) - Week 20-22
-- **UCH LAS** (Oct 14, 2025 - Dec 30, 2025) - Week 41-53
-- **Mass spec training** (Jun 3, 2025) - Week 22
-- **KAM training** (Jun 10, 2025) - Week 23
-
-**Nerissa's Projects:**
-- **Troubleshooting** (May 6, 2025 - Dec 30, 2025) - Week 18-53
-- **PYNEH u601** (Apr 22, 2025 - Apr 29, 2025) - Week 16-17
-- **UCH PIvka** (May 27, 2025) - Week 21
-- **MGH LAS** (Jun 10, 2025 - Jul 8, 2025) - Week 23-27
-- **Mass spec training** (Jun 3, 2025) - Week 22
-- **Mass spec launch** (Jun 10, 2025 - Aug 5, 2025) - Week 23-31
-
-### Project Assignments
-- Each team member is assigned to multiple projects
-- Realistic workload distribution across the team
-- Projects span from early 2024 to end of 2024
-- Week numbers converted to actual calendar dates
-
-### Loading Mock Data
+### Loading Mock Data (Optional)
 ```sql
 -- Run this in Supabase SQL Editor after setting up the schema
--- File: mock_data_inserts.sql
+-- File: mock_data_inserts.sql (if available)
 
--- This will create:
--- 1. 9 team member profiles with mock emails
--- 2. 28 projects with realistic timelines
--- 3. Project member assignments linking team members to projects
+-- This will create sample:
+-- 1. Team member profiles
+-- 2. Projects with realistic timelines
+-- 3. Project member assignments
 -- 4. Proper UUID generation and constraint handling
 ```
 
-**Note**: The mock data uses `invitation_status = 'accepted'` to comply with database constraints. All team members are set as active users.
+**Note**: Mock data is for demonstration purposes only and should be removed in production environments.
 
 ## Database Schema
 
