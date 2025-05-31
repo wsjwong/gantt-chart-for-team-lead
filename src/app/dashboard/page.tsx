@@ -662,21 +662,42 @@ export default function DashboardPage() {
       .map(([key, group]) => ({ key, ...group }))
   }
 
-  // Calculate person's capacity for a specific week
+  // Calculate person's capacity for a specific week (8 hours per day = 100%)
   const getPersonCapacity = (personProjects: Project[], weekIndex: number) => {
-    let totalCapacity = 0
+    let totalHours = 0
     const weekStart = weeks[weekIndex]
     const weekEnd = new Date(weekStart)
     weekEnd.setDate(weekEnd.getDate() + 6)
     
     personProjects.forEach(project => {
-      const position = getProjectPosition(project, weekIndex)
-      if (position) {
-        totalCapacity += position.percentage
+      const projectStart = new Date(project.start_date)
+      const projectEnd = new Date(project.end_date)
+      
+      // Check if project overlaps with this week
+      if (projectEnd < weekStart || projectStart > weekEnd) {
+        return
+      }
+      
+      // Calculate overlap days
+      const overlapStart = new Date(Math.max(projectStart.getTime(), weekStart.getTime()))
+      const overlapEnd = new Date(Math.min(projectEnd.getTime(), weekEnd.getTime()))
+      const overlapDays = Math.floor((overlapEnd.getTime() - overlapStart.getTime()) / (24 * 60 * 60 * 1000)) + 1
+      
+      if (project.total_hours && overlapDays > 0) {
+        // Calculate total project duration in days
+        const projectDurationDays = Math.floor((projectEnd.getTime() - projectStart.getTime()) / (24 * 60 * 60 * 1000)) + 1
+        
+        // Calculate hours per day for this project
+        const hoursPerDay = project.total_hours / projectDurationDays
+        
+        // Add hours for the overlapping days
+        totalHours += hoursPerDay * overlapDays
       }
     })
     
-    return Math.min(100, totalCapacity)
+    // Convert to percentage (8 hours = 100%)
+    const maxHoursPerWeek = 8 * 7 // 8 hours per day * 7 days
+    return (totalHours / maxHoursPerWeek) * 100
   }
 
   const toggleGroupExpansion = (groupKey: string) => {
@@ -845,7 +866,7 @@ export default function DashboardPage() {
                                   : 'bg-gray-100'
                               } transition-colors`}
                               style={{ width: `${Math.min(100, capacity)}%` }}
-                              title={`${group.person ? (group.person.full_name || group.person.email) : 'Unassigned'}: ${Math.round(capacity)}% capacity`}
+                              title={`${group.person ? (group.person.full_name || group.person.email) : 'Unassigned'}: ${Math.round(capacity)}% capacity (${Math.round((capacity / 100) * 56)} hours/week, max 56 hours)`}
                             >
                               {capacity > 30 && (
                                 <span className="text-xs text-white font-medium">
@@ -918,15 +939,18 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-green-200 rounded"></div>
-                  <span>Normal Capacity (≤80%)</span>
+                  <span>Normal Capacity (≤45h/week)</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-pink-200 rounded"></div>
-                  <span>High Capacity (80-100%)</span>
+                  <span>High Capacity (45-56h/week)</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-red-200 rounded"></div>
-                  <span>Over Capacity (&gt;100%)</span>
+                  <span>Over Capacity (&gt;56h/week)</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  • Daily capacity: 8 hours/day • Weekly capacity: 56 hours/week (7 days)
                 </div>
               </div>
             </div>
