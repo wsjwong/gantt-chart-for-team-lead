@@ -505,8 +505,18 @@ export default function DashboardPage() {
         }
       }
 
+      // Create updated project with assignment information
+      const updatedProject = {
+        ...data,
+        assigned_user_id: projectForm.assigned_to || null,
+        assigned_user_name: projectForm.assigned_to 
+          ? teamMembers.find(m => m.id === projectForm.assigned_to)?.full_name || 
+            teamMembers.find(m => m.id === projectForm.assigned_to)?.email || null
+          : null
+      }
+
       // Update the projects list
-      setProjects(projects.map(p => p.id === editingProject.id ? data : p))
+      setProjects(projects.map(p => p.id === editingProject.id ? updatedProject : p))
       setShowEditProject(false)
       setEditingProject(null)
       setProjectForm({
